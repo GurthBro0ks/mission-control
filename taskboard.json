@@ -1,0 +1,210 @@
+{
+  "board_name": "Ned & Gurth Task Board",
+  "created": "2026-02-18",
+  "last_updated": "2026-02-20T15:33:43.362Z",
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Fix trading bot syntax errors",
+      "description": "Fix all syntax errors in kalshi_optimize.py, sef_spot_trading.py, stock_hunter.py, and logging_config.py",
+      "status": "done",
+      "assignee": "ned",
+      "priority": "high",
+      "created_at": "2026-02-18T17:30:00Z",
+      "updated_at": "2026-02-20T12:56:35.595Z",
+      "delegated_to": "ned",
+      "progress": 100,
+      "notes": [
+        "Task completed by ned at 07:56 AM ET",
+        "Task started — assigned to ned at 12:46 PM ET"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Run trading bot in shadow mode",
+      "description": "Keep bot running hourly in shadow mode for testing",
+      "status": "in_progress",
+      "assignee": "ned",
+      "priority": "high",
+      "created_at": "2026-02-18T18:55:00Z",
+      "updated_at": "2026-02-20T14:19:50.827Z",
+      "delegated_to": "pip",
+      "progress": 100,
+      "notes": [
+        "Task started — assigned to ned at 09:19 AM ET",
+        "Task completed by ned at 12:44 PM ET",
+        "Task started — assigned to ned at 12:02 PM ET"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Move bot to micro-live mode",
+      "description": "Switch from shadow to micro-live trading with proper risk gates",
+      "status": "todo",
+      "assignee": "gurth",
+      "priority": "medium",
+      "created_at": "2026-02-18T18:55:00Z",
+      "updated_at": "2026-02-18T18:55:00Z",
+      "delegated_to": null,
+      "progress": 0,
+      "notes": []
+    },
+    {
+      "id": 4,
+      "title": "Fix chkrootkit cron frequency",
+      "description": "Chkrootkit is actually a systemd timer running daily - the frequent messages are coming from OpenClaw cron system (unauthorized error prevents me from fixing)",
+      "status": "done",
+      "assignee": "ned",
+      "priority": "low",
+      "created_at": "2026-02-18T04:39:00Z",
+      "updated_at": "2026-02-18T19:15:00Z",
+      "delegated_to": null,
+      "progress": 100,
+      "notes": []
+    },
+    {
+      "id": 6,
+      "title": "Test: Verify task bridge",
+      "description": "End-to-end test",
+      "status": "todo",
+      "assignee": "Rex",
+      "priority": "high",
+      "created_at": "2026-02-19T14:13:10.709Z",
+      "updated_at": "2026-02-20T14:18:18.654Z",
+      "delegated_to": "rex",
+      "progress": 0,
+      "notes": [
+        "Task started — assigned to Rex at 07:53 AM ET",
+        "Task started — assigned to Rex at 09:13 AM ET"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "test task",
+      "description": "delegate some tasks to sub-agents to test the workflow.",
+      "status": "in_progress",
+      "assignee": "ned",
+      "priority": "medium",
+      "created_at": "2026-02-20T11:31:27.671Z",
+      "updated_at": "2026-02-20T14:18:42.648Z",
+      "delegated_to": "ned",
+      "progress": 0,
+      "notes": [
+        "Task started — assigned to ned at 09:18 AM ET",
+        "Task started — assigned to ned at 06:34 AM ET"
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Bug fix verification test",
+      "description": "",
+      "status": "todo",
+      "assignee": "Rex",
+      "priority": "high",
+      "created_at": "2026-02-20T15:33:43.362Z",
+      "updated_at": "2026-02-20T15:33:43.362Z",
+      "delegated_to": null,
+      "progress": 0,
+      "notes": []
+    },
+    {
+      "id": 9,
+      "title": "Stoat Chat Deployment on NUC1",
+      "description": "Deploy Stoat/Revolt chat at chat.slimyai.xyz with Docker Compose behind Caddy",
+      "status": "done",
+      "assignee": "ned",
+      "priority": "high",
+      "created_at": "2026-02-23T08:17:31Z",
+      "updated_at": "2026-02-23T16:29:21Z",
+      "delegated_to": "ned",
+      "progress": 100,
+      "notes": [
+        "Mission #72 - 6 steps: Docker Compose v2, clone repo, config, customize, Caddy, deploy",
+        "Steps 1-5 complete. Docker stack running on port 8080. Need host Caddy update for chat.slimyai.xyz",
+        "Autonomous mode: checking sudo status and preparing final report",
+        "Autonomous: All 15/15 containers healthy. Report generated at /home/slimy/ned-clawd/reports/stoat-chat-deployment-report.md",
+        "BLOCKED: Host Caddy needs sudo - sudoers syntax error",
+        "HTTP access working internally. SSL rate-limited until 16:20 UTC. External access needs verification.",
+        "SSL certificate obtained! HTTPS working at https://chat.slimyai.xyz"
+      ]
+    },
+    {
+      "id": 10,
+      "title": "MongoDB Backup System",
+      "description": "Create automated MongoDB backup for Stoat chat with 14-day retention",
+      "status": "done",
+      "assignee": "ned",
+      "priority": "high",
+      "created_at": "2026-02-23T17:40:35Z",
+      "updated_at": "2026-02-23T17:42:59Z",
+      "delegated_to": "forge",
+      "progress": 100,
+      "notes": [
+        "Mission #73 - Daily backups at 3AM, restore script, config backup",
+        "Backup verified: 22 collections, 4KB archive, cron at 3AM daily"
+      ]
+    },
+    {
+      "id": 11,
+      "title": "SMTP Configuration",
+      "description": "Configure email for Stoat chat verification and password resets",
+      "status": "done",
+      "assignee": "ned",
+      "priority": "medium",
+      "created_at": "2026-02-23T17:40:35Z",
+      "updated_at": "2026-02-23T17:54:33Z",
+      "delegated_to": null,
+      "progress": 100,
+      "notes": [
+        "Mission #74 - External SMTP provider or self-hosted",
+        "Self-hosted Postfix SMTP relay configured. Container healthy. Email verification enabled."
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Frontend Theming - Retro Cyberpunk",
+      "description": "Apply retro-cyberpunk aesthetic to Stoat frontend",
+      "status": "done",
+      "assignee": "ned",
+      "priority": "low",
+      "created_at": "2026-02-23T17:40:35Z",
+      "updated_at": "2026-02-23T18:17:47Z",
+      "delegated_to": null,
+      "progress": 100,
+      "notes": [
+        "Mission #75 - CSS override injection first, then full fork if needed",
+        "Slime theme applied - digital green drips, neon glow, monospace fonts"
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Slimy Chat - Branding Fixes",
+      "description": "Remove bad theme, replace Revolt branding with Slimy Chat, quick wins",
+      "status": "done",
+      "assignee": "ned",
+      "priority": "high",
+      "created_at": "2026-02-23T18:40:20Z",
+      "updated_at": "2026-02-23T19:46:49Z",
+      "delegated_to": "ned",
+      "progress": 100,
+      "notes": [
+        "Mission #76 - Fix theme, branding, instance name, channels, invites",
+        "Branding fixed: CSS/JS injected, title updated, invite codes created"
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Fix 3 Remaining Issues",
+      "description": "Wordmark SVG, text replacement, network access",
+      "status": "done",
+      "assignee": "ned",
+      "priority": "high",
+      "created_at": "2026-02-23T20:40:38Z",
+      "updated_at": "2026-02-23T20:40:38Z",
+      "progress": 100,
+      "notes": [
+        "Mission #77 - Wordmark SVG replaced with slime.chat, aggressive text replacement, network verified"
+      ]
+    }
+  ]
+}
