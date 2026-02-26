@@ -49,3 +49,94 @@ body {
   color: var(--foreground);
   font-family: 'JetBrains Mono', 'Courier New', monospace;
 }
+
+/* Cyberpunk Enhancements */
+
+/* Glow effects */
+.glow-cyan {
+  text-shadow: 0 0 10px #22d3ee, 0 0 20px #22d3ee40;
+}
+
+.glow-magenta {
+  text-shadow: 0 0 10px #ec4899, 0 0 20px #ec489940;
+}
+
+.glow-green {
+  text-shadow: 0 0 10px #22c55e, 0 0 20px #22c55e40;
+}
+
+/* Neon borders */
+.neon-border {
+  border: 1px solid #22d3ee;
+  box-shadow: 0 0 5px #22d3ee40, inset 0 0 5px #22d3ee20;
+}
+
+.neon-border-magenta {
+  border: 1px solid #ec4899;
+  box-shadow: 0 0 5px #ec489940, inset 0 0 5px #ec489920;
+}
+
+/* Bracketed nav style */
+.bracketed-nav::before {
+  content: '[';
+  color: #22d3ee;
+}
+
+.bracketed-nav::after {
+  content: ']';
+  color: #22d3ee;
+}
+
+/* Scanline effect */
+.scanlines::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+}
+
+/* Pulse animation for status */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px #22c55e; }
+  50% { box-shadow: 0 0 20px #22c55e, 0 0 30px #22c55e60; }
+}
+
+.status-online {
+  animation: pulse-glow 2s infinite;
+}
+
+/* CRT flicker */
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.97; }
+  15% { opacity: 0.94; }
+  20% { opacity: 0.98; }
+  100% { opacity: 0.97; }
+}
+
+.crt-flicker {
+  animation: flicker 0.15s infinite;
+}
+
+/* Terminal blink cursor */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor-blink::after {
+  content: '█';
+  animation: blink 1s step-end infinite;
+  color: #22d3ee;
+}

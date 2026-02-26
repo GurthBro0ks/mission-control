@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+:root {
+  /* Base colors */
+  --background: #050508;
+  --card: #0a0a0f;
+  --modal: #0c0c14;
+  --border: #1a1a2e;
+  --muted: #475569;
+  
+  /* Agent accent colors */
+  --ned: #22d3ee;
+  --rex: #ef4444;
+  --atlas: #a78bfa;
+  --sentinel: #f87171;
+  --git: #34d399;
+  --scout: #fbbf24;
+  --query: #60a5fa;
+  --cloud: #c084fc;
+  --pip: #4ade80;
+  
+  --foreground: #e2e8f0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-card: var(--card);
+  --color-modal: var(--modal);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  
+  --color-ned: var(--ned);
+  --color-rex: var(--rex);
+  --color-atlas: var(--atlas);
+  --color-sentinel: var(--sentinel);
+  --color-git: var(--git);
+  --color-scout: var(--scout);
+  --color-query: var(--query);
+  --color-cloud: var(--cloud);
+  --color-pip: var(--pip);
+  
+  --color-foreground: var(--foreground);
+  
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
