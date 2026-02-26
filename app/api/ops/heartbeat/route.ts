@@ -1,0 +1,116 @@
+import { NextResponse } from 'next/server';
+import {
+  getSteps,
+  updateStep,
+  getMissions,
+  getProposals,
+  emitEvent,
+  checkPolicy,
+  queryOps
+} from '@/lib/ops';
+
+export async function POST(request: Request) {
+  try {
+    const staleTaskTimeoutValue = checkPolicy('stale_task_timeout');
+    const staleTaskTimeout = staleTaskTimeoutValue
+      ? (staleTaskTimeoutValue as { minutes?: number }).minutes || 30
+      : 30;
+    const staleThreshold = new Date(Date.now() - staleTaskTimeout * 60 * 1000).toISOString();
+
+    // Find stale steps (in_progress longer than timeout)
+    const staleSteps = getSteps({ status: 'in_progress' }).filter(
+      (step) => step.started_at && step.started_at < staleThreshold
+    );
+
+    const staleRecovered: number[] = [];
+
+    // Mark stale steps as failed
+    for (const step of staleSteps) {
+      updateStep(step.id, {
+        status: 'failed',
+        result: 'stale_timeout'
+      });
+      staleRecovered.push(step.id);
+
+      // Emit event for each recovered step
+      emitEvent('step_stale_recovered', 'heartbeat', {
+        stepId: step.id,
+        missionId: step.mission_id,
+        originalStartedAt: step.started_at,
+        staleTimeout: staleTaskTimeout
+      });
+    }
+
+    // Find stale missions (in_progress but all steps completed/failed)
+    const inProgressMissions = getMissions({ status: 'in_progress' });
+    const staleMissions: number[] = [];
+
+    for (const mission of inProgressMissions) {
+      const steps = getSteps({ missionId: mission.id });
+      if (steps.length === 0) continue;
+
+      const allStepsDone = steps.every(
+        (s) => s.status === 'completed' || s.status === 'failed'
+      );
+
+      if (allStepsDone) {
+        // Call finalize logic directly
+        const completedSteps = steps.filter((s) => s.status === 'completed').length;
+        const failedSteps = steps.filter((s) => s.status === 'failed').length;
+
+        let missionStatus = 'completed';
+        let emitType = 'mission_completed';
+
+        if (failedSteps > 0) {
+          missionStatus = 'failed';
+          emitType = 'mission_failed';
+        }
+
+        // Update mission status
+        const updateStmt = queryOps(
+          `UPDATE ops_missions SET status = ?, result = ?, completed_at = datetime('now') WHERE id = ?`,
+          [missionStatus, `${failedSteps > 0 ? 'partial_failure' : 'success'}`, mission.id]
+        );
+
+        staleMissions.push(mission.id);
+
+        emitEvent(emitType, 'heartbeat', {
+          missionId: mission.id,
+          title: mission.title,
+          completedSteps,
+          totalSteps: steps.length
+        });
+      }
+    }
+
+    // Count stats
+    const today = new Date().toISOString().split('T')[0];
+    const proposalsToday = getProposals({}).filter(
+      (p) => p.created_at.split('T')[0] === today
+    ).length;
+
+    const activeMissions = getMissions({ status: 'in_progress' }).length;
+    const queuedSteps = getSteps({ status: 'pending' }).length;
+    const runningSteps = getSteps({ status: 'in_progress' }).length;
+
+    const healthReport = {
+      timestamp: new Date().toISOString(),
+      stale_task_timeout_minutes: staleTaskTimeout,
+      stale_steps_recovered: staleRecovered.length,
+      stale_missions_finalized: staleMissions.length,
+      stats: {
+        proposals_today: proposalsToday,
+        active_missions: activeMissions,
+        queued_steps: queuedSteps,
+        running_steps: runningSteps
+      }
+    };
+
+    console.log('[heartbeat]', JSON.stringify(healthReport));
+
+    return NextResponse.json(healthReport);
+  } catch (error) {
+    console.error('[ops/heartbeat] POST error:', error);
+    return NextResponse.json({ error: 'Heartbeat failed' }, { status: 500 });
+  }
+}
