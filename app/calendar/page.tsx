@@ -85,13 +85,13 @@ export default function CalendarPage() {
   }, []);
 
   const fetchCalendar = async () => {
-    const res = await fetch('/api/calendar');
+    const res = await fetch('/mission-control/api/calendar');
     const calendarData = await res.json();
     setData(calendarData);
   };
 
   const fetchCrons = async () => {
-    const res = await fetch('/api/cron');
+    const res = await fetch('/mission-control/api/cron');
     const cronData = await res.json();
     setCrons(cronData.crons || []);
   };
@@ -148,7 +148,7 @@ export default function CalendarPage() {
 
   const handleSave = async () => {
     if (!selectedEvent || selectedEvent.id < 1000) {
-      await fetch(`/api/calendar/${selectedEvent?.id}`, {
+      await fetch(`/mission-control/api/calendar/${selectedEvent?.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -166,14 +166,14 @@ export default function CalendarPage() {
 
   const handleDelete = async () => {
     if (selectedEvent && selectedEvent.id < 1000) {
-      await fetch(`/api/calendar/${selectedEvent.id}`, { method: 'DELETE' });
+      await fetch(`/mission-control/api/calendar/${selectedEvent.id}`, { method: 'DELETE' });
     }
     setSelectedEvent(null);
     fetchCalendar();
   };
 
   const handleCreate = async () => {
-    await fetch('/api/calendar', {
+    await fetch('/mission-control/api/calendar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -202,7 +202,7 @@ export default function CalendarPage() {
   // Cron handlers
   const handleAddCron = async () => {
     const schedule = `${cronFormData.minute} ${cronFormData.hour} ${cronFormData.dom} ${cronFormData.month} ${cronFormData.dow}`;
-    await fetch('/api/cron', {
+    await fetch('/mission-control/api/cron', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -226,7 +226,7 @@ export default function CalendarPage() {
   const handleUpdateCron = async () => {
     if (!selectedCron) return;
     const schedule = `${cronFormData.minute} ${cronFormData.hour} ${cronFormData.dom} ${cronFormData.month} ${cronFormData.dow}`;
-    await fetch(`/api/cron/${selectedCron.index}`, {
+    await fetch(`/mission-control/api/cron/${selectedCron.index}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -240,7 +240,7 @@ export default function CalendarPage() {
 
   const handleDeleteCron = async () => {
     if (!selectedCron) return;
-    await fetch(`/api/cron/${selectedCron.index}`, {
+    await fetch(`/mission-control/api/cron/${selectedCron.index}`, {
       method: 'DELETE',
     });
     setSelectedCron(null);

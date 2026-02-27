@@ -14,7 +14,7 @@ export function useSSE() {
   const attemptRef = useRef(0);
 
   const connect = useCallback(() => {
-    const eventSource = new EventSource('/api/sse');
+    const eventSource = new EventSource('/mission-control/api/sse');
 
     eventSource.onmessage = (e) => {
       try {

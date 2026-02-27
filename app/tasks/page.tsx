@@ -73,7 +73,7 @@ export default function TasksPage() {
 
   // SSE listener for real-time updates
   useEffect(() => {
-    const es = new EventSource('/api/sse');
+    const es = new EventSource('/mission-control/api/sse');
     es.addEventListener('message', (e) => {
       try {
         const d = JSON.parse(e.data);
@@ -85,7 +85,7 @@ export default function TasksPage() {
 
   const fetchTasks = async () => {
     try {
-      const res = await fetch('/api/tasks');
+      const res = await fetch('/mission-control/api/tasks');
       if (!res.ok) throw new Error('Failed to fetch tasks');
       const data = await res.json();
       // Detect changed tasks for flash highlight
@@ -127,7 +127,7 @@ export default function TasksPage() {
       const msg = nextStatus === 'in_progress'
         ? `Task started — ${task.title} assigned to ${task.assignee}`
         : `Task completed — ${task.title}`;
-      fetch('/api/comms', {
+      fetch('/mission-control/api/comms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -139,7 +139,7 @@ export default function TasksPage() {
       }).catch(() => {});
     }
 
-    await fetch(`/api/tasks/${task.id}`, {
+    await fetch(`/mission-control/api/tasks/${task.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: nextStatus }),
@@ -150,14 +150,14 @@ export default function TasksPage() {
   const deleteTask = async (taskId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!window.confirm('Delete this task?')) return;
-    await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+    await fetch(`/mission-control/api/tasks/${taskId}`, { method: 'DELETE' });
     fetchTasks();
   };
 
   const handleSave = async () => {
     if (!editingTask) return;
 
-    await fetch(`/api/tasks/${editingTask.id}`, {
+    await fetch(`/mission-control/api/tasks/${editingTask.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -176,7 +176,7 @@ export default function TasksPage() {
   };
 
   const handleCreate = async () => {
-    await fetch('/api/tasks', {
+    await fetch('/mission-control/api/tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData),
@@ -547,7 +547,7 @@ export default function TasksPage() {
               <button
                 onClick={async () => {
                   if (!window.confirm('Delete this task?')) return;
-                  await fetch(`/api/tasks/${editingTask.id}`, { method: 'DELETE' });
+                  await fetch(`/mission-control/api/tasks/${editingTask.id}`, { method: 'DELETE' });
                   setEditingTask(null);
                   fetchTasks();
                 }}

@@ -89,7 +89,7 @@ export default function Shell({
 
   useEffect(() => {
     // Initial fetch
-    fetch('/api/health')
+    fetch('/mission-control/api/health')
       .then(r => r.json())
       .then(data => {
         setHealth({
@@ -109,7 +109,7 @@ export default function Shell({
 
     // Refresh every 30 seconds
     const interval = setInterval(() => {
-      fetch('/api/health')
+      fetch('/mission-control/api/health')
         .then(r => r.json())
         .then(data => {
           setHealth({
@@ -139,14 +139,14 @@ export default function Shell({
     const fetchInsights = async () => {
       try {
         // Get agents
-        const agentsRes = await fetch('/api/agents');
+        const agentsRes = await fetch('/mission-control/api/agents');
         if (!agentsRes.ok) return;
         const agentsData = await agentsRes.json();
         if (!agentsData) return;
 
         // Get today's events
         const today = new Date().toISOString().split('T')[0];
-        const eventsRes = await fetch(`/api/ops/events?limit=100&offset=0`);
+        const eventsRes = await fetch(`/mission-control/api/ops/events?limit=100&offset=0`);
         if (!eventsRes.ok) return;
         const eventsData = await eventsRes.json();
 
@@ -155,7 +155,7 @@ export default function Shell({
         );
 
         // Get missions
-        const missionsRes = await fetch('/api/ops/missions');
+        const missionsRes = await fetch('/mission-control/api/ops/missions');
         if (!missionsRes.ok) return;
         const missionsData = await missionsRes.json();
         const activeMissions = ((missionsData?.missions) || []).filter((m: { status: string }) =>
@@ -216,15 +216,16 @@ export default function Shell({
               {/* Title with glow */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '20px' }}>🧪</span>
-                <span style={{
+                <a href="https://slimyai.xyz" target="_blank" rel="noopener noreferrer" style={{
                   fontSize: '20px',
                   fontWeight: 700,
                   color: '#22d3ee',
                   letterSpacing: '0.5px',
                   textShadow: '0 0 12px #22d3ee60',
+                  textDecoration: 'none',
                 }}>
                   SLIMYAI MISSION CONTROL
-                </span>
+                </a>
                 {/* Live pulse dot */}
                 <div style={{
                   width: '8px',
@@ -257,12 +258,9 @@ export default function Shell({
             <nav style={{ display: 'flex', gap: '0.25rem', padding: '0.5rem 1rem', height: '36px', alignItems: 'center', justifyContent: 'center' }}>
               {[
                 { href: '/', label: 'OFFICE', icon: '🏢', count: 0 },
-                { href: '/tasks', label: 'TASKS', icon: '📋', count: 0 },
-                { href: '/calendar', label: 'CALENDAR', icon: '📅', count: 0 },
                 { href: '/bulletin', label: 'BULLETIN', icon: '📌', count: 0 },
                 { href: '/comms', label: 'COMMS', icon: '💬', count: 0 },
                 { href: '/ops', label: 'OPS', icon: '⚙️', count: opsCounts.pending },
-                { href: '/feed', label: 'FEED', icon: '📡', count: 0 },
                 { href: '/memory', label: 'MEMORY', icon: '🧠', count: 0 },
               ].map((tab) => (
                 <Link
@@ -394,7 +392,7 @@ export default function Shell({
                   <span><span style={{ color: '#fbbf24' }}>{insightsCounts.events}</span> events</span>
                   <span style={{ color: '#4b5563' }}>·</span>
                   <Link
-                    href="/feed"
+                    href="/ops"
                     style={{ color: '#6b7280', textDecoration: 'none', transition: 'color 0.15s' }}
                     onClick={(e) => e.stopPropagation()}
                   >

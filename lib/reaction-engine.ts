@@ -96,7 +96,7 @@ export async function processReactions(eventType: string, eventData: any, depth:
     };
 
     try {
-      const response = await fetch('http://localhost:3838/api/proposals/submit', {
+      const response = await fetch('http://localhost:3838/mission-control/api/proposals/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

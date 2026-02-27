@@ -107,7 +107,7 @@ export default function StepProgress({ step, missionId, onRetry, onReview }: Ste
   const handleStartDeliberation = async () => {
     setDeliberating(true);
     try {
-      const response = await fetch('/api/deliberate', {
+      const response = await fetch('/mission-control/api/deliberate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ missionId }),

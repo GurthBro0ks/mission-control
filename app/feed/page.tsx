@@ -118,7 +118,7 @@ export default function FeedPage() {
           params.set("agent", selectedAgents.join(","));
         }
 
-        const res = await fetch(`/api/feed?${params.toString()}`);
+        const res = await fetch(`/mission-control/api/feed?${params.toString()}`);
         if (!res.ok) {
           setEntries(loadMore ? entries : []);
           setCounts({ all: 0, chat: 0, pulse: 0, ops: 0, incident: 0, story: 0 });
@@ -155,7 +155,7 @@ export default function FeedPage() {
     let eventSource: EventSource | null = null;
 
     const connectSSE = () => {
-      eventSource = new EventSource("/api/sse");
+      eventSource = new EventSource("/mission-control/api/sse");
 
       eventSource.onmessage = (event) => {
         try {
@@ -570,7 +570,7 @@ export default function FeedPage() {
                   : "all";
 
               try {
-                await fetch("/api/comms", {
+                await fetch("/mission-control/api/comms", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({

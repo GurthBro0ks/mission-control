@@ -28,7 +28,7 @@ interface Mission {
   id: number;
   proposal_id: number | null;
   title: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status: 'pending' | 'in_progress' | 'active' | 'queued' | 'completed' | 'failed';
   priority: string;
   assigned_to: string | null;
   delegated_to: string | null;
@@ -55,6 +55,18 @@ const STATUS_CONFIG = {
     textColor: '#3b82f6',
     label: 'In Progress',
   },
+  active: {
+    bgColor: '#3b82f622',
+    borderColor: '#3b82f644',
+    textColor: '#3b82f6',
+    label: 'Active',
+  },
+  queued: {
+    bgColor: '#8b5cf622',
+    borderColor: '#8b5cf644',
+    textColor: '#8b5cf6',
+    label: 'Queued',
+  },
   completed: {
     bgColor: '#22c55e22',
     borderColor: '#22c55e44',
@@ -77,7 +89,7 @@ export default function MissionCard({ mission, steps = [] }: MissionCardProps) {
 
   const handleRetryStep = async (stepId: number) => {
     try {
-      await fetch(`/api/ops/steps/${stepId}`, {
+      await fetch(`/mission-control/api/ops/steps/${stepId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'pending', result: null }),
@@ -91,7 +103,7 @@ export default function MissionCard({ mission, steps = [] }: MissionCardProps) {
 
   const handleReviewStep = async (stepId: number, action: 'approve' | 'reject', notes?: string) => {
     try {
-      await fetch(`/api/ops/steps/${stepId}`, {
+      await fetch(`/mission-control/api/ops/steps/${stepId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reviewAction: action, reviewedBy: 'user', reviewNotes: notes }),

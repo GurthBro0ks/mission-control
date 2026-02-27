@@ -36,18 +36,27 @@ const AGENT_COLORS: Record<number, string> = {
   8: '#4ade80', // Pip
 };
 
-const WATER_COOLER_QUOTES = [
-  "Did you see that arb spread?",
-  "NUC2 latency is way down",
-  "Ned's got us grinding today",
-  "Kelly fraction debate again...",
-  "Shadow mode looking good",
-  "Who touched the config?!",
-  "Cross-venue is the play",
-  "Need more coffee...",
-  "Webhook handler is clean now",
-  "Gurth wants it automated",
+// Work-related conversation topics (instead of WATER_COOLER_QUOTES)
+const WORK_TOPICS = [
+  "Deploying to production shortly",
+  "PR review looks good",
+  "Found a bug in the trading bot",
+  "Shadow mode is executing well",
+  "New proposal came in",
+  "Task completed successfully",
+  "Need help with this issue",
+  "Running tests now",
+  "Checking the config settings",
+  "Analyzing market data",
+  "Updating the documentation",
+  "Optimizing the database queries",
+  "Reviewing the latest PR",
+  "Testing the new endpoint",
+  "Monitoring the agent loop",
 ];
+
+// Track last post time per agent (30-minute cooldown)
+const agentLastPostTime: Record<string, number> = {};
 
 // Desk positions
 const DESKS = [
@@ -129,6 +138,11 @@ interface RunningStep {
   assigned_to: string | null;
 }
 
+// Agent lookup for assigned steps
+function getAgentByName(agents: Agent[], name: string): Agent | undefined {
+  return agents.find(a => a.name.toLowerCase() === name.toLowerCase());
+}
+
 export default function PixelOffice() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -148,7 +162,7 @@ export default function PixelOffice() {
 
   // Initialize agents
   useEffect(() => {
-    fetch('/api/agents')
+    fetch('/mission-control/api/agents')
       .then(res => res.json())
       .then(team => {
         const initializedAgents: Agent[] = team.subagents.map((a: any) => {
@@ -221,7 +235,7 @@ export default function PixelOffice() {
   useEffect(() => {
     const fetchRunningSteps = async () => {
       try {
-        const res = await fetch('/api/ops/steps?status=in_progress');
+        const res = await fetch('/mission-control/api/ops/steps?status=in_progress');
         const data = await res.json();
         setRunningSteps(data.steps || []);
       } catch (err) {
@@ -230,7 +244,7 @@ export default function PixelOffice() {
     };
 
     fetchRunningSteps();
-    const interval = setInterval(fetchRunningSteps, 5000);
+    const interval = setInterval(fetchRunningSteps, 30000); // Poll every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -238,7 +252,7 @@ export default function PixelOffice() {
   useEffect(() => {
     const fetchReactions = async () => {
       try {
-        const res = await fetch('/api/ops/events?type=reaction&limit=10');
+        const res = await fetch('/mission-control/api/ops/events?type=reaction&limit=10');
         const data = await res.json();
         setReactionEvents(data.events || []);
       } catch (err) {
@@ -255,7 +269,7 @@ export default function PixelOffice() {
   useEffect(() => {
     const fetchBulletinEvents = async () => {
       try {
-        const res = await fetch('/api/ops/events?limit=5');
+        const res = await fetch('/mission-control/api/ops/events?limit=5');
         const data = await res.json();
         setBulletinEvents(data.events || []);
       } catch (err) {
@@ -268,16 +282,30 @@ export default function PixelOffice() {
     return () => clearInterval(interval);
   }, []);
 
-  // Update agent status based on running steps
+  // Update agent status and desk assignment based on running steps
   useEffect(() => {
-    if (runningSteps.length === 0) return;
+    // Get desks for agents
+    const getDeskForAgent = (agentId: number) => DESKS.find(d => d.agentId === agentId);
 
     setAgents(prev => prev.map(agent => {
       const step = runningSteps.find(s =>
         s.assigned_to?.toLowerCase() === agent.name.toLowerCase()
       );
       if (step && agent.status !== 'working') {
+        // Agent has assigned step - move to their desk
+        const desk = getDeskForAgent(agent.id);
+        if (desk) {
+          return { 
+            ...agent, 
+            status: 'working',
+            targetX: desk.x,
+            targetY: desk.y,
+          };
+        }
         return { ...agent, status: 'working' };
+      } else if (!step && agent.status === 'working') {
+        // Agent has no assigned step - set to idle
+        return { ...agent, status: 'idle' };
       }
       return agent;
     }));
@@ -288,7 +316,18 @@ export default function PixelOffice() {
         s.assigned_to?.toLowerCase() === agent.name.toLowerCase()
       );
       if (step && agent.status !== 'working') {
+        const desk = getDeskForAgent(agent.id);
+        if (desk) {
+          return { 
+            ...agent, 
+            status: 'working',
+            targetX: desk.x,
+            targetY: desk.y,
+          };
+        }
         return { ...agent, status: 'working' };
+      } else if (!step && agent.status === 'working') {
+        return { ...agent, status: 'idle' };
       }
       return agent;
     });
@@ -787,18 +826,27 @@ export default function PixelOffice() {
           ctx.fillStyle = flickerAmount > 1 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
           ctx.fillRect(desk.x - 17, desk.y - 9, 24, 14);
         }
-        // Screen content when working
+        // Screen content when working - with typing animation
         if (agent.status === 'working') {
-          // Code lines
+          // Typing animation - lines shift based on tick
+          const typeOffset = Math.floor(tickRef.current / 10) % 3;
+          // Code lines that "type" across the screen
           ctx.fillStyle = agent.color;
-          ctx.fillRect(desk.x - 14, desk.y - 6, 12, 2);
-          ctx.fillRect(desk.x - 14, desk.y - 3, 18, 2);
-          ctx.fillRect(desk.x - 14, desk.y, 8, 2);
-          // Progress bar
+          // Line 1 - always shown but width varies with typing animation
+          const line1Width = 8 + (typeOffset === 0 ? 8 : (typeOffset === 1 ? 4 : 0));
+          ctx.fillRect(desk.x - 14, desk.y - 6, line1Width, 2);
+          // Line 2
+          const line2Width = typeOffset >= 1 ? 12 + (typeOffset === 2 ? 6 : 0) : 6;
+          ctx.fillRect(desk.x - 14, desk.y - 3, line2Width, 2);
+          // Line 3
+          const line3Width = typeOffset >= 2 ? 10 : 4;
+          ctx.fillRect(desk.x - 14, desk.y, line3Width, 2);
+          // Progress bar with pulsing effect
           ctx.fillStyle = '#333';
           ctx.fillRect(desk.x - 14, desk.y + 4, 18, 3);
           ctx.fillStyle = agent.color;
-          ctx.fillRect(desk.x - 14, desk.y + 4, 12, 3);
+          const progressWidth = 8 + Math.sin(tickRef.current * 0.1) * 6 + 4;
+          ctx.fillRect(desk.x - 14, desk.y + 4, progressWidth, 3);
         }
 
         // Keyboard
@@ -978,13 +1026,66 @@ export default function PixelOffice() {
       agentsRef.current.forEach(agent => {
         if (!agent.x || !agent.y) return;
 
-        // AI behavior
-        if (agent.status === 'idle' || agent.status === 'on-demand') {
+        // Get the step assigned to this agent
+        const assignedStep = runningSteps.find(s =>
+          s.assigned_to?.toLowerCase() === agent.name.toLowerCase()
+        );
+
+        // AI behavior based on agent status
+        if (assignedStep) {
+          // Agent has assigned step - stay at desk and work
+          const desk = DESKS.find(d => d.agentId === agent.id);
+          if (desk) {
+            agent.targetX = desk.x;
+            agent.targetY = desk.y;
+            
+            // Move to desk if not there
+            const dx = agent.targetX - agent.x;
+            const dy = agent.targetY - agent.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > 5) {
+              agent.x += (dx / dist) * 0.5;
+              agent.y += (dy / dist) * 0.5;
+              agent.walkFrame = (agent.walkFrame || 0) + 0.2;
+              
+              // Track path history
+              if (!agent.pathHistory) agent.pathHistory = [];
+              agent.pathHistory.push({ x: agent.x, y: agent.y, tick: tickRef.current });
+              if (agent.pathHistory.length > 60) agent.pathHistory.shift();
+            } else {
+              // At desk - show typing animation
+              agent.status = 'working';
+              agent.walkFrame = (agent.walkFrame || 0) + 0.5; // Faster for typing
+            }
+          }
+        } else if (agent.status === 'idle' || agent.status === 'on-demand' || agent.status === 'active') {
+          // No assigned step - wander or go to watercooler (except Ned)
           // Random movement
           if (!agent.targetX || !agent.targetY || 
               (Math.abs(agent.x - agent.targetX) < 5 && Math.abs(agent.y - agent.targetY) < 5)) {
             // At target, choose new one
-            if (Math.random() < 0.35 && agent.id !== 0) {
+            
+            // NED SPECIAL BEHAVIOR: 80% at desk, 20% walking around
+            if (agent.id === 0) {
+              if (Math.random() < 0.8) {
+                // Stay at desk (80% chance)
+                const nedDesk = DESKS.find(d => d.agentId === 0);
+                if (nedDesk) {
+                  agent.targetX = nedDesk.x;
+                  agent.targetY = nedDesk.y;
+                }
+              } else {
+                // Walk around checking on agents (20% chance)
+                // Pick a random agent's desk to visit
+                const randomDesk = DESKS[Math.floor(Math.random() * DESKS.length)];
+                if (randomDesk && randomDesk.agentId !== 0) {
+                  agent.targetX = randomDesk.x;
+                  agent.targetY = randomDesk.y + 25; // Stand beside their desk
+                }
+              }
+            } else if (agent.id !== 0 && Math.random() < 0.35) {
+              // Regular agents can go to water cooler (not Ned)
               // Go to water cooler
               agent.targetX = WATER_COOLER.x + (Math.random() - 0.5) * 30;
               agent.targetY = WATER_COOLER.y + 40;
@@ -994,7 +1095,12 @@ export default function PixelOffice() {
             }
           }
           
-          // Move toward target
+          // Move toward target (guard against undefined)
+          if (!agent.targetX || !agent.targetY) {
+            // Set default target if missing
+            agent.targetX = agent.x || 100;
+            agent.targetY = agent.y || 100;
+          }
           const dx = agent.targetX - agent.x;
           const dy = agent.targetY - agent.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
@@ -1036,22 +1142,34 @@ export default function PixelOffice() {
             if (!agent.coolerTimer && !agent.speechBubble) {
               agent.coolerTimer = 300 + Math.random() * 300; // 5-10 seconds at 60fps
             }
-            // Show speech bubble during cooldown
+            // Show speech bubble during cooldown - only post if 30 min have passed
             if (agent.coolerTimer && agent.coolerTimer > 200 && !agent.speechBubble && Math.random() < 0.02) {
-              const quote = WATER_COOLER_QUOTES[Math.floor(Math.random() * WATER_COOLER_QUOTES.length)];
-              agent.speechBubble = quote;
-              agent.speechTimer = 80 + Math.random() * 60;
-              // Post to comms API
-              fetch('/api/comms', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  from: agent.name,
-                  to: 'all',
-                  message: quote,
-                  channel: 'watercooler',
-                }),
-              }).catch(() => {});
+              const quote = WORK_TOPICS[Math.floor(Math.random() * WORK_TOPICS.length)];
+              const now = Date.now();
+              const COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
+              
+              // Check if agent can post (30-minute cooldown per agent)
+              const lastPost = agentLastPostTime[agent.name] || 0;
+              if (now - lastPost > COOLDOWN_MS) {
+                agentLastPostTime[agent.name] = now;
+                agent.speechBubble = quote;
+                agent.speechTimer = 80 + Math.random() * 60;
+                // Post to comms API
+                fetch('/mission-control/api/comms', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    from: agent.name,
+                    to: 'all',
+                    message: quote,
+                    channel: 'watercooler',
+                  }),
+                }).catch(() => {});
+              } else {
+                // Just show speech bubble without posting
+                agent.speechBubble = quote;
+                agent.speechTimer = 80 + Math.random() * 60;
+              }
             }
             // Don't move while at watercooler
             if (agent.coolerTimer && agent.coolerTimer > 0) {
@@ -1073,21 +1191,29 @@ export default function PixelOffice() {
 
         }
 
-        // Path trail - dashed line behind walking agents
+        // Path trail - enhanced vivid rendering with glow and thicker lines
         if (agent.pathHistory && agent.pathHistory.length > 1) {
-          ctx.setLineDash([4, 6]);
-          ctx.lineWidth = 1;
+          ctx.lineWidth = 2; // Thicker (2px instead of 1px)
+          
+          // Add glow effect
+          ctx.shadowBlur = 3;
+          ctx.shadowColor = agent.color;
+          
           for (let i = 1; i < agent.pathHistory.length; i++) {
             const prev = agent.pathHistory[i - 1];
             const curr = agent.pathHistory[i];
             // Fade based on index (newer = more opaque)
-            const alpha = (i / agent.pathHistory.length) * 0.3;
+            const alpha = (i / agent.pathHistory.length) * 0.4;
+            // Use brighter cyan/magenta colors with agent's base color
             ctx.strokeStyle = agent.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
             ctx.beginPath();
             ctx.moveTo(prev.x, prev.y);
             ctx.lineTo(curr.x, curr.y);
             ctx.stroke();
           }
+          
+          // Reset shadow for other drawing
+          ctx.shadowBlur = 0;
           ctx.setLineDash([]);
         }
 

@@ -136,7 +136,7 @@ function useSSE() {
   const [event, setEvent] = useState<{ type: string; data?: unknown } | null>(null);
 
   useEffect(() => {
-    const es = new EventSource('/api/sse');
+    const es = new EventSource('/mission-control/api/sse');
     es.addEventListener('message', (e) => {
       try {
         const d = JSON.parse(e.data);
@@ -182,7 +182,7 @@ export default function OpsPage() {
 
   const fetchProposals = useCallback(async () => {
     try {
-      const res = await fetch('/api/ops/proposals');
+      const res = await fetch('/mission-control/api/ops/proposals');
       const data = await res.json();
       setProposals(data.proposals || []);
     } catch (err) {
@@ -192,12 +192,12 @@ export default function OpsPage() {
 
   const fetchMissions = useCallback(async () => {
     try {
-      const res = await fetch('/api/ops/missions');
+      const res = await fetch('/mission-control/api/ops/missions');
       const data = await res.json();
       const missionsWithSteps: Mission[] = await Promise.all(
         (data.missions || []).map(async (mission: Mission) => {
           try {
-            const stepsRes = await fetch(`/api/ops/steps?mission_id=${mission.id}`);
+            const stepsRes = await fetch(`/mission-control/api/ops/steps?mission_id=${mission.id}`);
             const stepsData = await stepsRes.json();
             return { ...mission, steps: stepsData.steps || [] };
           } catch {
@@ -213,7 +213,7 @@ export default function OpsPage() {
 
   const fetchEvents = useCallback(async () => {
     try {
-      const res = await fetch('/api/ops/events?limit=100');
+      const res = await fetch('/mission-control/api/ops/events?limit=100');
       const data = await res.json();
       setEvents(data.events || []);
     } catch (err) {
@@ -223,7 +223,7 @@ export default function OpsPage() {
 
   const fetchPolicies = useCallback(async () => {
     try {
-      const res = await fetch('/api/ops/policy');
+      const res = await fetch('/mission-control/api/ops/policy');
       const data = await res.json();
       // Handle array response format from API
       const policyList: Policy[] = (data.policies || []).map((p: { key: string; value: string; description?: string }) => ({
@@ -268,7 +268,7 @@ export default function OpsPage() {
   const handleApprove = async (id: number) => {
     setApprovingId(id);
     try {
-      const res = await fetch(`/api/ops/proposals/${id}`, {
+      const res = await fetch(`/mission-control/api/ops/proposals/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'approved' }),
@@ -291,7 +291,7 @@ export default function OpsPage() {
     setRejectingId(id);
     try {
       const reason = prompt('Rejection reason (optional):');
-      await fetch(`/api/ops/proposals/${id}`, {
+      await fetch(`/mission-control/api/ops/proposals/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'rejected', rejectionReason: reason || null }),
@@ -307,7 +307,7 @@ export default function OpsPage() {
   const handleCreateProposal = async () => {
     if (!newProposal.title) return;
     try {
-      const res = await fetch('/api/proposals/submit', {
+      const res = await fetch('/mission-control/api/proposals/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -349,7 +349,7 @@ export default function OpsPage() {
   };
 
   const handleSavePolicy = async (key: string, value: unknown) => {
-    await fetch('/api/ops/policy', {
+    await fetch('/mission-control/api/ops/policy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, value }),
@@ -359,7 +359,7 @@ export default function OpsPage() {
 
   const handleWakeNed = async () => {
     try {
-      const res = await fetch('/api/wake-ned', {
+      const res = await fetch('/mission-control/api/wake-ned', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -376,7 +376,7 @@ export default function OpsPage() {
 
   const handleTriggerDailyBrief = async () => {
     try {
-      const res = await fetch('/api/scheduler/daily-brief', {
+      const res = await fetch('/mission-control/api/scheduler/daily-brief', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -401,7 +401,7 @@ export default function OpsPage() {
 
   const handleTestDiscord = async () => {
     try {
-      const res = await fetch('/api/discord/test', { method: 'POST' });
+      const res = await fetch('/mission-control/api/discord/test', { method: 'POST' });
       if (res.ok) {
         showToast('Test message sent!', 'success');
       } else {

@@ -42,7 +42,7 @@ export default function OfficePage() {
 
   const fetchScoreboard = async () => {
     try {
-      const res = await fetch('/api/ops/scoreboard');
+      const res = await fetch('/mission-control/api/ops/scoreboard');
       const data: ScoreboardResponse = await res.json();
       setScoreboard(data.scoreboard);
       setSummary(data.summary);

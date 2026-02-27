@@ -94,7 +94,7 @@ export default function BulletinPage() {
         params.set('type', activeFilter);
       }
 
-      const res = await fetch(`/api/bulletin?${params}`);
+      const res = await fetch(`/mission-control/api/bulletin?${params}`);
       const data = await res.json();
 
       if (reset) {
@@ -122,7 +122,7 @@ export default function BulletinPage() {
 
   // SSE for live updates
   useEffect(() => {
-    const es = new EventSource('/api/sse');
+    const es = new EventSource('/mission-control/api/sse');
     es.addEventListener('message', (e) => {
       try {
         const eventData = JSON.parse(e.data);

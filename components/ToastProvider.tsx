@@ -68,7 +68,7 @@ export default function ToastProvider() {
 
   useEffect(() => {
     // Connect to SSE
-    eventSourceRef.current = new EventSource("/api/sse");
+    eventSourceRef.current = new EventSource("/mission-control/api/sse");
 
     eventSourceRef.current.onmessage = (event) => {
       try {
@@ -112,7 +112,7 @@ export default function ToastProvider() {
       eventSourceRef.current?.close();
       setTimeout(() => {
         if (eventSourceRef.current?.readyState === EventSource.CLOSED) {
-          eventSourceRef.current = new EventSource("/api/sse");
+          eventSourceRef.current = new EventSource("/mission-control/api/sse");
         }
       }, 3000);
     };

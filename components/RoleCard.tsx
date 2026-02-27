@@ -121,7 +121,7 @@ export default function RoleCard({ agentKey, agentData, onClose }: RoleCardProps
     const fetchStats = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/ops/agent-stats/${agentKey}`);
+        const response = await fetch(`/mission-control/api/ops/agent-stats/${agentKey}`);
         const data = await response.json();
         setStatsData(data);
       } catch (error) {

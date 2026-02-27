@@ -106,7 +106,7 @@ export default function MemoryPage() {
 
   // Load tree structure
   useEffect(() => {
-    fetch('/api/memory?tree=true')
+    fetch('/mission-control/api/memory?tree=true')
       .then(res => res.json())
       .then(data => {
         setTree(data.tree || []);
@@ -116,7 +116,7 @@ export default function MemoryPage() {
 
   // Load stats
   useEffect(() => {
-    fetch('/api/memory')
+    fetch('/mission-control/api/memory')
       .then(res => res.json())
       .then(data => {
         setStats({
@@ -138,7 +138,7 @@ export default function MemoryPage() {
 
     setIsSearching(true);
     const timer = setTimeout(() => {
-      fetch(`/api/memory?search=${encodeURIComponent(search)}`)
+      fetch(`/mission-control/api/memory?search=${encodeURIComponent(search)}`)
         .then(res => res.json())
         .then(data => {
           setSearchResults(data.searchResults || []);
@@ -154,7 +154,7 @@ export default function MemoryPage() {
     try {
       const useRaw = rawMode ?? isRaw;
       const encodedPath = path.split('/').map(encodeURIComponent).join('/');
-      const res = await fetch(`/api/memory/${encodedPath}?raw=${useRaw}`);
+      const res = await fetch(`/mission-control/api/memory/${encodedPath}?raw=${useRaw}`);
       if (!res.ok) throw new Error('File not found');
       if (useRaw) {
         const text = await res.text();

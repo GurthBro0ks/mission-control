@@ -65,7 +65,6 @@ function renderMessageText(text: string): React.ReactNode {
 
 export default function CommsPage() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
   const [activeChannel, setActiveChannel] = useState('all');
   const [onlineAgents, setOnlineAgents] = useState<string[]>(['Ned']);
   const [liveTime, setLiveTime] = useState('');
@@ -91,14 +90,14 @@ export default function CommsPage() {
 
   // Fetch messages on load
   useEffect(() => {
-    fetch('/api/comms?limit=200')
+    fetch('/mission-control/api/comms?limit=200')
       .then(res => res.json())
       .then(data => setMessages(data.messages || []));
   }, []);
 
   // SSE connection for real-time updates
   useEffect(() => {
-    const eventSource = new EventSource('/api/sse');
+    const eventSource = new EventSource('/mission-control/api/sse');
 
     eventSource.addEventListener('message', (e) => {
       try {
@@ -142,30 +141,6 @@ export default function CommsPage() {
       localStorage.setItem(`lastRead_${id}`, new Date().toISOString());
     }
     setUnreadCounts(prev => ({ ...prev, [id]: 0 }));
-  };
-
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    const res = await fetch('/api/comms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: 'Gurth',
-        to: 'all',
-        message: input,
-        channel: CHANNEL_SEND[activeChannel],
-      }),
-    });
-
-    setInput('');
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.message) {
-        setMessages(prev => [...prev, data.message]);
-      }
-    }
   };
 
   const activeCh = CHANNELS.find(c => c.id === activeChannel)!;
@@ -357,46 +332,18 @@ export default function CommsPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar */}
+        {/* Input Bar - Read-only mode */}
         <div style={{
           background: 'linear-gradient(180deg, #0d1f0d 0%, #1a3a1a 100%)',
           padding: '12px',
           borderTop: '1px solid #2a5a2a',
           display: 'flex',
-          gap: '8px',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}>
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Send directive to agents..."
-            style={{
-              flex: 1,
-              background: '#0a0f0a',
-              border: '2px solid #2cb84c',
-              borderRadius: '4px',
-              color: '#5ae67a',
-              padding: '8px 12px',
-              fontSize: '12px',
-              outline: 'none',
-            }}
-          />
-          <button
-            onClick={sendMessage}
-            style={{
-              background: 'linear-gradient(180deg, #5ae67a 0%, #2cb84c 100%)',
-              border: 'none',
-              color: '#0a0f0a',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              cursor: 'pointer',
-            }}
-          >
-            SEND ▸
-          </button>
+          <span style={{ color: '#2a5a2a', fontSize: '11px', fontStyle: 'italic' }}>
+            📖 Comms feed is read-only — agents post automatically
+          </span>
         </div>
 
         {/* Status Bar */}
