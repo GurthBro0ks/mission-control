@@ -253,13 +253,17 @@ export default function Shell({
               </div>
             </div>
 
-            {/* Nav Tabs - Centered */}
-            <nav style={{ display: 'flex', gap: '1.5rem', padding: '0.5rem 1rem', height: '36px', alignItems: 'center', justifyContent: 'center' }}>
+            {/* Nav Tabs - Centered - Bracketed Style */}
+            <nav style={{ display: 'flex', gap: '0.25rem', padding: '0.5rem 1rem', height: '36px', alignItems: 'center', justifyContent: 'center' }}>
               {[
-                { href: '/', label: 'Office', icon: '🏢', count: 0 },
-                { href: '/ops', label: 'Ops', icon: '⚙️', count: opsCounts.pending },
-                { href: '/feed', label: 'Feed', icon: '📡', count: 0 },
-                { href: '/memory', label: 'Memory', icon: '🧠', count: 0 },
+                { href: '/', label: 'OFFICE', icon: '🏢', count: 0 },
+                { href: '/tasks', label: 'TASKS', icon: '📋', count: 0 },
+                { href: '/calendar', label: 'CALENDAR', icon: '📅', count: 0 },
+                { href: '/bulletin', label: 'BULLETIN', icon: '📌', count: 0 },
+                { href: '/comms', label: 'COMMS', icon: '💬', count: 0 },
+                { href: '/ops', label: 'OPS', icon: '⚙️', count: opsCounts.pending },
+                { href: '/feed', label: 'FEED', icon: '📡', count: 0 },
+                { href: '/memory', label: 'MEMORY', icon: '🧠', count: 0 },
               ].map((tab) => (
                 <Link
                   key={tab.href}
