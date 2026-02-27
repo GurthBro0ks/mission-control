@@ -23,37 +23,18 @@ interface Proposal {
   mission_id: number | null;
 }
 
-interface Step {
-  id: number;
-  mission_id: number;
-  step_order: number;
-  kind: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'pending_review';
-  assigned_to: string | null;
-  result: string | null;
-  created_at: string;
-  updated_at: string;
-  depends_on: string | null;
-  review_status: string | null;
-  reviewed_by: string | null;
-  review_notes: string | null;
-  context: string | null;
-  locked_files: string;
-}
-
 interface Mission {
   id: number;
   proposal_id: number | null;
   title: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status: 'pending' | 'in_progress' | 'active' | 'queued' | 'completed' | 'failed';
   priority: string;
   assigned_to: string | null;
   delegated_to: string | null;
   result: string | null;
   created_at: string;
   updated_at: string;
-  steps?: Step[];
+  steps?: any[];
 }
 
 interface Event {
@@ -421,7 +402,7 @@ export default function OpsPage() {
   ];
 
   const pendingCount = proposals.filter(p => p.status === 'pending').length;
-  const activeMissions = missions.filter(m => m.status === 'in_progress').length;
+  const activeMissions = missions.filter(m => m.status === 'in_progress' || m.status === 'active').length;
   const pendingProposals = proposals.filter(p => p.status === 'pending');
 
   return (

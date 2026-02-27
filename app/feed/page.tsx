@@ -417,11 +417,11 @@ export default function FeedPage() {
               key={entry.id}
               style={{
                 display: "flex",
-                gap: "12px",
-                padding: "12px",
+                gap: "10px",
+                padding: "8px 10px",
                 background: "#0a0a0f",
-                borderRadius: "6px",
-                border: "1px solid #1e3a4a",
+                borderRadius: "4px",
+                border: "1px solid #1a1a2e",
                 animation:
                   entry.id === newEntry
                     ? "slideIn 0.3s ease-out"
@@ -431,14 +431,14 @@ export default function FeedPage() {
               {/* Agent Icon */}
               <div
                 style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "6px",
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "4px",
                   background: "#111827",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "16px",
+                  fontSize: "12px",
                   flexShrink: 0,
                 }}
               >
@@ -453,20 +453,17 @@ export default function FeedPage() {
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
-                    marginBottom: "4px",
+                    marginBottom: "2px",
                   }}
                 >
                   <span
                     style={{
-                      fontSize: "13px",
+                      fontSize: "12px",
                       fontWeight: 600,
                       color: agentColors[entry.agent] || "#e2e8f0",
                     }}
                   >
                     {entry.agent}
-                  </span>
-                  <span style={{ fontSize: "10px", color: "#4b5563" }}>
-                    {typeIcons[entry.type]}
                   </span>
                   <span
                     style={{
@@ -480,40 +477,13 @@ export default function FeedPage() {
                   </span>
                 </div>
 
-                {/* Tags */}
-                {entry.tags.length > 0 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "4px",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    {entry.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        style={{
-                          fontSize: "9px",
-                          padding: "2px 6px",
-                          background: "#1e3a4a",
-                          borderRadius: "4px",
-                          color: "#6b7280",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
                 {/* Message */}
                 <div
                   style={{
-                    fontSize: "13px",
-                    color: "#4ade80",
+                    fontSize: "12px",
+                    color: "#9ca3af",
                     fontFamily: "var(--font-jetbrains), monospace",
-                    lineHeight: 1.5,
+                    lineHeight: 1.4,
                     wordBreak: "break-word",
                   }}
                 >

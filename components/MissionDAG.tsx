@@ -7,7 +7,7 @@ interface Step {
   mission_id: number;
   kind: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'pending_review';
+  status: 'pending' | 'in_progress' | 'active' | 'queued' | 'completed' | 'failed' | 'pending_review';
   assigned_to: string | null;
   result: string | null;
   created_at: string;
@@ -34,6 +34,16 @@ const STATUS_CONFIG = {
     borderColor: '#fbbf24',
     bgColor: '#fbbf2422',
     textColor: '#fbbf24',
+  },
+  active: {
+    borderColor: '#3b82f6',
+    bgColor: '#3b82f622',
+    textColor: '#3b82f6',
+  },
+  queued: {
+    borderColor: '#8b5cf6',
+    bgColor: '#8b5cf622',
+    textColor: '#8b5cf6',
   },
   completed: {
     borderColor: '#22c55e',

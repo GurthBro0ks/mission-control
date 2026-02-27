@@ -68,10 +68,14 @@ export async function GET(request: Request) {
 
         const agent = extractAgent(note);
 
+        // Clean up message: remove raw ISO timestamp prefix like "[2026-02-26T20:16:35.906954+00:00]"
+        const cleanMessage = note.replace(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}\]\s*/, '');
+        console.log(`[bulletin] Note cleanup: "${note.substring(0, 60)}" -> "${cleanMessage.substring(0, 60)}"`);
+
         entries.push({
           type: entryType,
           agent,
-          message: note,
+          message: cleanMessage,
           timestamp: task.updated_at,
           relatedTask: {
             id: task.id,
@@ -152,10 +156,13 @@ export async function GET(request: Request) {
         continue;
       }
 
+      // Clean up message: remove raw ISO timestamp prefix like "[2026-02-26T20:16:35.906954+00:00]"
+      const cleanMessage = msg.message.replace(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+\+\d{2}:\d{2}\]\s*/, '');
+
       entries.push({
         type: entryType,
         agent: msg.from_agent.toLowerCase(),
-        message: msg.message,
+        message: cleanMessage,
         timestamp: msg.timestamp,
         channel: msg.channel,
       });

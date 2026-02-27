@@ -25,12 +25,6 @@ function writeDailyMemory(stats: {
   const today = new Date().toISOString().split('T')[0];
   const memFile = path.join(MEMORY_DIR, `${today}.md`);
   
-  // Check if already exists
-  if (fs.existsSync(memFile)) {
-    console.log('[heartbeat] Memory file already exists for today');
-    return;
-  }
-  
   const content = `# ${today} - Daily Summary
 
 ## System Health

@@ -220,64 +220,24 @@ export default function BulletinPage() {
                   animation: isNew ? 'slideDown 0.3s ease-out' : 'none',
                 }}
               >
-                {/* Card Header */}
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{typeStyle.icon}</span>
-                    <span
-                      className="text-sm font-medium"
-                      style={{ color: agentColor }}
-                    >
-                      {entry.agent}
-                    </span>
-                    <span className="text-gray-500 text-xs">
-                      {formatRelativeTime(entry.timestamp)}
-                    </span>
-                  </div>
-                  <span className="text-xs text-gray-500 px-2 py-0.5 rounded bg-[#1a1a2e]">
-                    {typeStyle.label}
+                {/* Card Header - Simplified: icon | agent | time */}
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{typeStyle.icon}</span>
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: agentColor }}
+                  >
+                    {entry.agent}
+                  </span>
+                  <span className="text-gray-500 text-xs">
+                    {formatRelativeTime(entry.timestamp)}
                   </span>
                 </div>
 
                 {/* Message */}
-                <p className="text-gray-200 text-sm mb-2">
+                <p className="text-gray-200 text-sm mt-2">
                   {entry.message}
                 </p>
-
-                {/* Related Task */}
-                {entry.relatedTask && (
-                  <div className="flex items-center gap-2 mt-3 pt-2 border-t border-[#1a1a2e]">
-                    <span
-                      className="text-xs px-1.5 py-0.5 rounded"
-                      style={{
-                        backgroundColor:
-                          entry.relatedTask.priority === 'high'
-                            ? '#ef444420'
-                            : entry.relatedTask.priority === 'medium'
-                            ? '#f59e0b20'
-                            : '#64748b20',
-                        color:
-                          entry.relatedTask.priority === 'high'
-                            ? '#ef4444'
-                            : entry.relatedTask.priority === 'medium'
-                            ? '#f59e0b'
-                            : '#64748b',
-                      }}
-                    >
-                      {entry.relatedTask.priority}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      #{entry.relatedTask.id} {entry.relatedTask.title}
-                    </span>
-                  </div>
-                )}
-
-                {/* Channel */}
-                {entry.channel && (
-                  <div className="mt-2 text-xs text-gray-500">
-                    via {entry.channel}
-                  </div>
-                )}
               </div>
             );
           })}

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMessages, addMessage } from '@/lib/db';
+import { getMessages, addMessage, deduplicateMessages } from '@/lib/db';
 // Direct import of broadcast to bypass Next.js module isolation
 import { broadcastSSE } from '@/app/api/sse/broadcast';
 import { exec } from 'child_process';
@@ -28,7 +28,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Check for duplicates before adding
+    if (channel === 'watercooler') {
+      const deduped = deduplicateMessages();
+      if (deduped > 0) {
+        console.log(`[comms] Deduplicated ${deduped} messages`);
+      }
+    }
+
     const newMessage = addMessage(from, to || 'all', message, channel || 'all');
+
+    // Check if message was blocked by cooldown
+    if (!newMessage) {
+      return NextResponse.json({ 
+        error: 'Cooldown active. Please wait 30 minutes between watercooler posts.',
+        cooldown: true 
+      }, { status: 429 });
+    }
 
     // Broadcast directly to SSE clients
     broadcastSSE({ type: 'new_message', data: newMessage });

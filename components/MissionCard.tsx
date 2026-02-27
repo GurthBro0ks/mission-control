@@ -6,9 +6,10 @@ import StepProgress from './StepProgress';
 import MissionDAG from './MissionDAG';
 import { formatSafeDate } from '@/lib/date-utils';
 
-interface Step {
+export interface Step {
   id: number;
   mission_id: number;
+  step_order: number;
   kind: string;
   description: string;
   status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'pending_review';

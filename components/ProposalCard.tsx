@@ -8,7 +8,7 @@ interface Step {
   step_order: number;
   kind: string;
   description: string | null;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'pending_review';
+  status: 'pending' | 'in_progress' | 'active' | 'queued' | 'completed' | 'failed' | 'pending_review';
   assigned_to: string | null;
   result: string | null;
   created_at: string;

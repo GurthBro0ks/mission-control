@@ -90,6 +90,15 @@ export function getMessages(
   return stmt.all(limit, offset) as CommsMessage[];
 }
 
+// Add cooldown tracking table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS comms_cooldowns (
+    agent TEXT PRIMARY KEY,
+    last_post_time TEXT NOT NULL,
+    channel TEXT NOT NULL
+  )
+`);
+
 // Add a message
 export function addMessage(
   from: string,
@@ -97,7 +106,34 @@ export function addMessage(
   msg: string,
   channel = 'all',
   type = 'message'
-): CommsMessage {
+): CommsMessage | null {
+  // Check cooldown for watercooler posts (30 minutes)
+  if (channel === 'watercooler') {
+    const cooldownStmt = db.prepare(`
+      SELECT last_post_time FROM comms_cooldowns
+      WHERE agent = ? AND channel = ?
+    `);
+    const lastPost = cooldownStmt.get(from, channel) as { last_post_time: string } | undefined;
+    
+    if (lastPost) {
+      const lastTime = new Date(lastPost.last_post_time).getTime();
+      const now = Date.now();
+      const cooldownMs = 30 * 60 * 1000; // 30 minutes
+      
+      if (now - lastTime < cooldownMs) {
+        console.log(`[comms] Cooldown active for ${from} on ${channel}`);
+        return null; // Block the message
+      }
+    }
+    
+    // Update cooldown
+    const upsertStmt = db.prepare(`
+      INSERT OR REPLACE INTO comms_cooldowns (agent, last_post_time, channel)
+      VALUES (?, datetime('now'), ?)
+    `);
+    upsertStmt.run(from, channel);
+  }
+  
   const stmt = db.prepare(`
     INSERT INTO comms (from_agent, to_agent, message, channel, type)
     VALUES (?, ?, ?, ?, ?)
@@ -106,6 +142,22 @@ export function addMessage(
 
   const getStmt = db.prepare('SELECT * FROM comms WHERE id = ?');
   return getStmt.get(result.lastInsertRowid) as CommsMessage;
+}
+
+// Deduplicate messages - remove duplicates based on from_agent, message, channel within 5 minutes
+export function deduplicateMessages(): number {
+  const stmt = db.prepare(`
+    DELETE FROM comms
+    WHERE id NOT IN (
+      SELECT MIN(id)
+      FROM comms
+      WHERE timestamp > datetime('now', '-5 minutes')
+      GROUP BY from_agent, message, channel
+    )
+    AND timestamp > datetime('now', '-5 minutes')
+  `);
+  const result = stmt.run();
+  return result.changes;
 }
 
 // Get total message count
