@@ -2,7 +2,7 @@
 
 export const AGENT_ROLES = {
   ned: {
-    name: 'Ned Carlson',
+    name: 'Ned',
     title: 'VP / Lead Agent',
     tagline: 'Coordinates, delegates, keeps ship tight. Michigan garage mechanic energy.',
     domain: ['Company coordination', 'Final sign-off', 'Agent delegation'],

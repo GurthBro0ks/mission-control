@@ -1,0 +1,20 @@
+{
+  "floors": [
+    {
+      "number": 1,
+      "name": "Floor 1",
+      "lead": "Ned",
+      "server": "NUC1",
+      "url": "https://slimyai.xyz/mission-control",
+      "color": "#00ff88"
+    },
+    {
+      "number": 2,
+      "name": "Floor 2",
+      "lead": "Chriss",
+      "server": "NUC2",
+      "url": "https://chriss.slimyai.xyz",
+      "color": "#ff44ff"
+    }
+  ]
+}

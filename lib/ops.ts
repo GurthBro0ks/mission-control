@@ -2,7 +2,9 @@ import Database from 'better-sqlite3';
 import { mkdirSync } from 'fs';
 import { processReactions } from './reaction-engine';
 
-const DB_DIR = '/home/slimy/ned-clawd/ops';
+// Support different databases for different floors via environment variable
+const CLAWD_NAME = process.env.CLAWD_NAME || 'ned-clawd';
+const DB_DIR = `/home/slimy/${CLAWD_NAME}/ops`;
 const DB_PATH = `${DB_DIR}/ops.db`;
 
 // Ensure directory exists before opening

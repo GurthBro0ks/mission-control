@@ -93,19 +93,34 @@ function calculateStats(base: Stats, completions: Record<string, number>): { cur
   return { current, delta };
 }
 
+// Helper to find agent key by key or display name
+function findAgentKey(agent: string): AgentKey | null {
+  const normalized = agent.toLowerCase().replace(/%20/g, ' ');
+  // Check if it's a key
+  if (normalized in AGENT_ROLES) return normalized as AgentKey;
+  // Check if it's a display name
+  for (const [key, role] of Object.entries(AGENT_ROLES)) {
+    if (role.name.toLowerCase() === normalized) return key as AgentKey;
+  }
+  return null;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ agent: string }> }
 ) {
   const { agent } = await params;
 
-  // Validate agent exists
-  const agentKey = agent.toLowerCase();
-  if (!AGENT_ROLES[agentKey as AgentKey]) {
+  // Validate agent exists (supports both key and display name)
+  const agentKey = findAgentKey(agent);
+  if (!agentKey) {
     return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
   }
 
-  const baseStats = AGENT_ROLES[agentKey as AgentKey].stats;
+  const baseStats = AGENT_ROLES[agentKey].stats;
+
+  // Use agentKey for response (works for both key and display name inputs)
+  const responseAgent = agentKey;
 
   try {
     // Query completed tasks for this agent
@@ -117,6 +132,7 @@ export async function GET(
     `);
 
     const rows = stmt.all(agentKey) as { kind: string; count: number }[];
+
     const completions: Record<string, number> = {};
     rows.forEach(row => {
       completions[row.kind] = row.count;
@@ -125,7 +141,7 @@ export async function GET(
     const { current, delta } = calculateStats(baseStats, completions);
 
     const response: StatsResponse = {
-      agent: agentKey,
+      agent: responseAgent,
       base: baseStats,
       current,
       delta,
@@ -136,7 +152,7 @@ export async function GET(
     console.error('Error fetching agent stats:', error);
     // Return base stats on error
     return NextResponse.json({
-      agent: agentKey,
+      agent: responseAgent,
       base: baseStats,
       current: baseStats,
       delta: {

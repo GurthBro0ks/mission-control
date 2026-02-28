@@ -123,7 +123,10 @@ export default function RoleCard({ agentKey, agentData, onClose }: RoleCardProps
       try {
         const response = await fetch(`/mission-control/api/ops/agent-stats/${agentKey}`);
         const data = await response.json();
-        setStatsData(data);
+        // Only set stats data if it's not an error response
+        if (!('error' in data)) {
+          setStatsData(data);
+        }
       } catch (error) {
         console.error('Failed to fetch agent stats:', error);
       } finally {
@@ -139,7 +142,7 @@ export default function RoleCard({ agentKey, agentData, onClose }: RoleCardProps
   }
 
   const accentColor = role.accent;
-  const hasLiveStats = statsData && (
+  const hasLiveStats = statsData && !('error' in statsData) && (
     statsData.delta.execution !== 0 ||
     statsData.delta.research !== 0 ||
     statsData.delta.trading !== 0 ||

@@ -5,7 +5,6 @@ import { execSync } from 'child_process';
 
 const MEMORY_DIRS = [
   '/home/slimy/ned-clawd/memory',
-  '/home/slimy/ned-clawd/logs',
   '/home/slimy/ned-clawd/ops',
   '/home/slimy/ned-clawd/triggers',
 ];
