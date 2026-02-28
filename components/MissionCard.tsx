@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import StepProgress from './StepProgress';
 import MissionDAG from './MissionDAG';
@@ -43,6 +43,10 @@ interface MissionCardProps {
   steps?: Step[];
 }
 
+
+// Module-level Set to persist expanded state across re-renders
+const expandedMissionIds = new Set<number>();
+
 const STATUS_CONFIG = {
   pending: {
     bgColor: '#fbbf2422',
@@ -83,7 +87,16 @@ const STATUS_CONFIG = {
 };
 
 export default function MissionCard({ mission, steps = [] }: MissionCardProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(() => expandedMissionIds.has(mission.id));
+  
+  // Sync expanded state to tracker
+  useEffect(() => {
+    if (expanded) {
+      expandedMissionIds.add(mission.id);
+    } else {
+      expandedMissionIds.delete(mission.id);
+    }
+  }, [expanded, mission.id]);
   const [viewMode, setViewMode] = useState<'list' | 'dag'>('list');
   const router = useRouter();
   const config = STATUS_CONFIG[mission.status] || STATUS_CONFIG.pending;

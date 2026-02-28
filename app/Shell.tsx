@@ -255,7 +255,7 @@ export default function Shell({
             </div>
 
             {/* Nav Tabs - Centered - Bracketed Style */}
-            <nav style={{ display: 'flex', gap: '0.25rem', padding: '0.5rem 1rem', height: '36px', alignItems: 'center', justifyContent: 'center' }}>
+            <nav style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem 1rem', height: '40px', alignItems: 'center', justifyContent: 'center' }}>
               {[
                 { href: '/', label: 'OFFICE', icon: '🏢', count: 0 },
                 { href: '/bulletin', label: 'BULLETIN', icon: '📌', count: 0 },
@@ -267,8 +267,8 @@ export default function Shell({
                   key={tab.href}
                   href={tab.href}
                   style={{
-                    padding: '0 16px',
-                    fontSize: '12px',
+                    padding: '8px 20px',
+                    fontSize: '14px',
                     color: '#6b7280',
                     textDecoration: 'none',
                     display: 'flex',
@@ -304,6 +304,38 @@ export default function Shell({
                   )}
                 </Link>
               ))}
+
+              {/* Floor Switcher */}
+              <div style={{ display: 'flex', gap: '12px', marginLeft: '24px', alignItems: 'center' }}>
+                <span style={{
+                  color: '#00ff88',
+                  fontFamily: 'monospace',
+                  fontSize: '14px',
+                  padding: '6px 12px',
+                  border: '2px solid #00ff88',
+                  borderRadius: '4px',
+                  background: 'rgba(0,255,136,0.15)',
+                  boxShadow: '0 0 10px rgba(0,255,136,0.3)',
+                }}>
+                  ▼ FLOOR 1 — NED
+                </span>
+                <a href="https://chriss.slimyai.xyz"
+                   style={{
+                     color: '#ff44ff',
+                     fontFamily: 'monospace',
+                     fontSize: '14px',
+                     textDecoration: 'none',
+                     padding: '6px 12px',
+                     border: '2px solid #ff44ff',
+                     borderRadius: '4px',
+                     background: 'transparent',
+                     transition: 'all 0.2s',
+                   }}
+                   onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,68,255,0.1)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(255,68,255,0.3)'; }}
+                   onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none'; }}>
+                  ↕ FLOOR 2 — CHRISS
+                </a>
+              </div>
             </nav>
 
             {/* Ops Status Bar - Centered, counts only */}
