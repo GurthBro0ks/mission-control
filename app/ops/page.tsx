@@ -209,7 +209,7 @@ export default function OpsPage() {
       // Handle array response format from API
       const policyList: Policy[] = (data.policies || []).map((p: { key: string; value: string; description?: string }) => ({
         key: p.key,
-        value: JSON.parse(p.value), // Parse the JSON string value
+        value: (() => { try { return JSON.parse(p.value); } catch { return p.value; } })(),
         description: p.description,
       }));
       setPolicies(policyList);
@@ -942,7 +942,7 @@ function PolicyRow({
         parsed = config.parse(value);
       } else {
         // Fall back to JSON parse for unknown policies
-        parsed = JSON.parse(value);
+        parsed = (() => { try { return JSON.parse(value); } catch { return value; } })();
       }
       onSave(policy.key, parsed);
       setEditing(false);
