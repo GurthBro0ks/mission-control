@@ -173,7 +173,7 @@ export class FileStore {
         created: new Date().toISOString().split('T')[0],
         last_updated: new Date().toISOString(),
         lead: {
-          name: 'Ned Carlson',
+          name: 'Ned',
           role: 'VP / Lead Agent',
           description: 'Proactive VP',
           status: 'active',

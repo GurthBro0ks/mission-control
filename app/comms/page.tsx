@@ -147,7 +147,7 @@ export default function CommsPage() {
   const filteredMessages = messages.filter(activeCh.filter);
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '16px' }}>
       {/* AIM Window Frame */}
       <div style={{
         background: '#0a0f0a',
