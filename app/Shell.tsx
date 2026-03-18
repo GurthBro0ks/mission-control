@@ -35,7 +35,7 @@ interface AgentInsight {
 function HealthPill({ label, value }: { label: string; value: number }) {
   const color = value < 50 ? '#22c55e' : value < 80 ? '#f59e0b' : '#ef4444';
   return (
-    <div style={{
+    <div className="health-pill" style={{
       display: 'flex',
       alignItems: 'center',
       gap: '6px',
@@ -45,7 +45,7 @@ function HealthPill({ label, value }: { label: string; value: number }) {
       border: `1px solid ${color}44`,
     }}>
       <span style={{ color: '#6b7280', fontSize: '10px', fontWeight: 600 }}>{label}</span>
-      <span style={{ color, fontSize: '11px', fontWeight: 700 }}>{value}%</span>
+      <span className="health-pill-value" style={{ color, fontSize: '11px', fontWeight: 700 }}>{value}%</span>
     </div>
   );
 }
@@ -56,6 +56,7 @@ function StatusIndicator({ type, alive }: { type: 'worker' | 'heartbeat'; alive:
   const label = type === 'worker' ? 'Worker' : 'Heartbeat';
   return (
     <div
+      className="status-indicator"
       title={`${label} ${alive ? 'running' : 'not running'}`}
       style={{
         display: 'flex',
@@ -216,7 +217,7 @@ export default function Shell({
               {/* Title with glow */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '20px' }}>🧪</span>
-                <a href="https://slimyai.xyz" target="_blank" rel="noopener noreferrer" style={{
+                <a href="https://slimyai.xyz" target="_blank" rel="noopener noreferrer" className="header-title" style={{
                   fontSize: '20px',
                   fontWeight: 700,
                   color: '#22d3ee',
@@ -238,7 +239,7 @@ export default function Shell({
               </div>
 
               {/* Health pills */}
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <HealthPill label="CPU" value={health.cpu} />
                 <HealthPill label="RAM" value={health.ram} />
                 <HealthPill label="DISK" value={health.disk} />
@@ -247,15 +248,47 @@ export default function Shell({
               </div>
 
               {/* System status */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6b7280', fontSize: '12px' }}>
-                <span>NED × NUC1</span>
+              <div className="system-status" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6b7280', fontSize: '12px' }}>
+                <span className="hide-mobile">NED × NUC1</span>
                 <span style={{ color: '#22c55e', fontSize: '10px' }}>●</span>
                 <span style={{ color: '#22c55e' }}>online</span>
               </div>
             </div>
 
+            {/* Floor Switcher - ABOVE nav tabs */}
+            <div className="floor-switcher" style={{ display: 'none', gap: '12px', marginLeft: '24px', alignItems: 'center' }}>
+              <span style={{
+                color: '#00ff88',
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                padding: '6px 12px',
+                border: '2px solid #00ff88',
+                borderRadius: '4px',
+                background: 'rgba(0,255,136,0.15)',
+                boxShadow: '0 0 10px rgba(0,255,136,0.3)',
+              }}>
+                ▼ FLOOR 1 — NED
+              </span>
+              <a href="https://chriss.slimyai.xyz"
+                 style={{
+                   color: '#ff44ff',
+                   fontFamily: 'monospace',
+                   fontSize: '14px',
+                   textDecoration: 'none',
+                   padding: '6px 12px',
+                   border: '2px solid #ff44ff',
+                   borderRadius: '4px',
+                   background: 'transparent',
+                   transition: 'all 0.2s',
+                 }}
+                 onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,68,255,0.1)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(255,68,255,0.3)'; }}
+                 onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none'; }}>
+                ↕ FLOOR 2 — CHRISS
+              </a>
+            </div>
+
             {/* Nav Tabs - Centered - Bracketed Style */}
-            <nav style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem 1rem', height: '40px', alignItems: 'center', justifyContent: 'center' }}>
+            <nav className="nav-tabs nav-scroll-mobile" style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem 1rem', minHeight: '40px', alignItems: 'center', justifyContent: 'center' }}>
               {[
                 { href: '/', label: 'OFFICE', icon: '🏢', count: 0 },
                 { href: '/bulletin', label: 'BULLETIN', icon: '📌', count: 0 },
@@ -277,10 +310,11 @@ export default function Shell({
                     borderBottom: '2px solid transparent',
                     transition: 'all 0.15s',
                     position: 'relative',
+                    whiteSpace: 'nowrap',
                   }}
                   className="nav-tab"
                 >
-                  {tab.icon} {tab.label}
+                  <span className="nav-icon">{tab.icon}</span> {tab.label}
                   {tab.count > 0 && (
                     <span style={{
                       position: 'absolute',
@@ -304,42 +338,10 @@ export default function Shell({
                   )}
                 </Link>
               ))}
-
-              {/* Floor Switcher */}
-              <div style={{ display: 'flex', gap: '12px', marginLeft: '24px', alignItems: 'center' }}>
-                <span style={{
-                  color: '#00ff88',
-                  fontFamily: 'monospace',
-                  fontSize: '14px',
-                  padding: '6px 12px',
-                  border: '2px solid #00ff88',
-                  borderRadius: '4px',
-                  background: 'rgba(0,255,136,0.15)',
-                  boxShadow: '0 0 10px rgba(0,255,136,0.3)',
-                }}>
-                  ▼ FLOOR 1 — NED
-                </span>
-                <a href="https://chriss.slimyai.xyz"
-                   style={{
-                     color: '#ff44ff',
-                     fontFamily: 'monospace',
-                     fontSize: '14px',
-                     textDecoration: 'none',
-                     padding: '6px 12px',
-                     border: '2px solid #ff44ff',
-                     borderRadius: '4px',
-                     background: 'transparent',
-                     transition: 'all 0.2s',
-                   }}
-                   onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,68,255,0.1)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(255,68,255,0.3)'; }}
-                   onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none'; }}>
-                  ↕ FLOOR 2 — CHRISS
-                </a>
-              </div>
             </nav>
 
             {/* Ops Status Bar - Centered, counts only */}
-            <div style={{
+            <div className="status-bar" style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -347,18 +349,21 @@ export default function Shell({
               background: '#0a0a0f',
               borderTop: '1px solid #1e3a4a',
               borderBottom: '1px solid #1e3a4a',
-              height: '32px',
+              minHeight: '32px',
+              flexWrap: 'wrap',
+              gap: '4px',
             }}>
-              <div style={{
+              <div className="status-bar-text" style={{
                 fontSize: '13px',
                 color: '#6b7280',
                 textShadow: '0 0 8px #22d3ee20',
+                textAlign: 'center',
               }}>
                 <span style={{ color: '#22c55e' }}>{opsCounts.active} active</span>
-                <span style={{ margin: '0 8px', color: '#3a3a4a' }}>·</span>
+                <span style={{ margin: '0 6px', color: '#3a3a4a' }}>·</span>
                 <span style={{ color: '#f59e0b' }}>{opsCounts.queued} queued</span>
-                <span style={{ margin: '0 8px', color: '#3a3a4a' }}>·</span>
-                <span style={{ color: '#6b7280' }}>{opsCounts.pending} pending approval</span>
+                <span style={{ margin: '0 6px', color: '#3a3a4a' }}>·</span>
+                <span style={{ color: '#6b7280' }}>{opsCounts.pending} pending</span>
               </div>
             </div>
 

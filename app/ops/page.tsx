@@ -455,7 +455,7 @@ export default function OpsPage() {
           </p>
         </div>
         {activeTab === 'proposals' && (
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="ops-buttons" style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={handleTriggerDailyBrief}
               style={{
@@ -638,7 +638,7 @@ export default function OpsPage() {
                 </div>
                 
                 {/* Action Buttons */}
-                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <div className="btn-stack-mobile" style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                   <button
                     onClick={() => handleApprove(proposal.id)}
                     disabled={approvingId === proposal.id}

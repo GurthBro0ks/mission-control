@@ -67,14 +67,22 @@ export default function OfficePage() {
   const hasActiveAgents = activeAgents.length > 0;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0f172a', gap: '1rem', padding: '1rem' }}>
+    <div className="main-container" style={{
+      display: 'flex',
+      flexDirection: 'row',
+      minHeight: '100vh',
+      backgroundColor: '#0f172a',
+      gap: '1rem',
+      padding: '1rem'
+    }}>
       {/* Left: Pixel Office Canvas */}
-      <div style={{ flex: '1', minWidth: 0 }}>
+      <div className="office-canvas" style={{ flex: '1', minWidth: 0 }}>
         <PixelOffice />
       </div>
 
       {/* Right: Scoreboard Panel */}
       <div
+        className="scoreboard"
         style={{
           width: '340px',
           backgroundColor: '#1e293b',
@@ -90,8 +98,8 @@ export default function OfficePage() {
       >
         {/* Header */}
         <div style={{ textAlign: 'center', borderBottom: '1px solid #334155', paddingBottom: '0.75rem' }}>
-          <h2 style={{ color: '#f59e0b', fontSize: '1.1rem', fontWeight: 'bold', margin: 0 }}>
-            🏆 SLIMY SCOREBOARD — This Week
+          <h2 className="scoreboard-title" style={{ color: '#f59e0b', fontSize: '1.1rem', fontWeight: 'bold', margin: 0 }}>
+            🏆 SCOREBOARD
           </h2>
         </div>
 
