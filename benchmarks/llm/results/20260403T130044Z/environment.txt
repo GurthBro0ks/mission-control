@@ -1,0 +1,8 @@
+timestamp_utc=2026-04-03T13:00:44Z
+hostname=slimy-nuc1
+kernel=Linux 6.8.0-100-generic x86_64 GNU/Linux
+cpu=Intel(R) Core(TM) i5-6260U CPU @ 1.80GHz
+cpus=4
+memory=15Gi total, 10Gi available
+ollama_version=ollama version is 0.12.11
+gpu=none
