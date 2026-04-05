@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, startTransition } from 'react';
 
 interface Message {
   id: number;
@@ -132,7 +132,7 @@ export default function CommsPage() {
         return new Date(ts) > lastRead;
       }).length;
     }
-    setUnreadCounts(counts);
+    startTransition(() => setUnreadCounts(counts));
   }, [messages]);
 
   const switchChannel = (id: string) => {

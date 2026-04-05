@@ -454,7 +454,7 @@ export default function Shell({
                   overflowY: 'auto',
                 }}>
                   <div style={{ fontSize: '10px', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
-                    Today's Agent Activity
+                    Today&apos;s Agent Activity
                   </div>
                   {insightsData.map((agent) => (
                     <div key={agent.name} onClick={() => setSelectedAgentKey(agent.name.toLowerCase())} style={{

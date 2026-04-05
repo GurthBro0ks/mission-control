@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, startTransition } from 'react';
 import RoleCard from './RoleCard';
 import { AGENT_ID_MAP } from '@/lib/agent-roles';
 
@@ -165,7 +165,7 @@ export default function PixelOffice() {
     fetch('/mission-control/api/agents')
       .then(res => res.json())
       .then(team => {
-        const initializedAgents: Agent[] = team.subagents.map((a: any) => {
+        const initializedAgents: Agent[] = team.subagents.map((a: { id: number; name: string; role: string; status: string; location: string; currentTask?: string }) => {
           const desk = DESKS.find(d => d.agentId === a.id);
           return {
             ...a,
@@ -287,28 +287,30 @@ export default function PixelOffice() {
     // Get desks for agents
     const getDeskForAgent = (agentId: number) => DESKS.find(d => d.agentId === agentId);
 
-    setAgents(prev => prev.map(agent => {
-      const step = runningSteps.find(s =>
-        s.assigned_to?.toLowerCase() === agent.name.toLowerCase()
-      );
-      if (step && agent.status !== 'working') {
-        // Agent has assigned step - move to their desk
-        const desk = getDeskForAgent(agent.id);
-        if (desk) {
-          return { 
-            ...agent, 
-            status: 'working',
-            targetX: desk.x,
-            targetY: desk.y,
-          };
+    startTransition(() => {
+      setAgents(prev => prev.map(agent => {
+        const step = runningSteps.find(s =>
+          s.assigned_to?.toLowerCase() === agent.name.toLowerCase()
+        );
+        if (step && agent.status !== 'working') {
+          // Agent has assigned step - move to their desk
+          const desk = getDeskForAgent(agent.id);
+          if (desk) {
+            return {
+              ...agent,
+              status: 'working',
+              targetX: desk.x,
+              targetY: desk.y,
+            };
+          }
+          return { ...agent, status: 'working' };
+        } else if (!step && agent.status === 'working') {
+          // Agent has no assigned step - set to idle
+          return { ...agent, status: 'idle' };
         }
-        return { ...agent, status: 'working' };
-      } else if (!step && agent.status === 'working') {
-        // Agent has no assigned step - set to idle
-        return { ...agent, status: 'idle' };
-      }
-      return agent;
-    }));
+        return agent;
+      }));
+    });
 
     // Also update agentsRef
     agentsRef.current = agentsRef.current.map(agent => {

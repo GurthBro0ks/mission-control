@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 interface SSEEvent {
   type: string;
   file?: string;
-  data?: any;
+  data?: unknown;
 }
 
 export function useSSE() {
@@ -32,6 +32,7 @@ export function useSSE() {
       const delay = Math.min(1000 * Math.pow(2, attemptRef.current), 30000);
       attemptRef.current++;
       
+      // eslint-disable-next-line react-hooks/immutability
       reconnectTimeoutRef.current = setTimeout(connect, delay);
     };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, startTransition } from 'react';
 import ProposalCard from '@/components/ProposalCard';
 import MissionCard from '@/components/MissionCard';
 import EventLog from '@/components/EventLog';
@@ -34,7 +34,26 @@ interface Mission {
   result: string | null;
   created_at: string;
   updated_at: string;
-  steps?: any[];
+  steps?: Step[];
+}
+
+interface Step {
+  id: number;
+  mission_id: number;
+  step_order: number;
+  kind: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'pending_review';
+  assigned_to: string | null;
+  result: string | null;
+  created_at: string;
+  updated_at: string;
+  depends_on: string | null;
+  review_status: string | null;
+  reviewed_by: string | null;
+  review_notes: string | null;
+  context: string | null;
+  locked_files: string;
 }
 
 interface Event {
@@ -927,10 +946,10 @@ function PolicyRow({
   useEffect(() => {
     if (config) {
       // For known policies, use the inner value for editing
-      setValue(String(innerValue));
+      startTransition(() => setValue(String(innerValue)));
     } else {
       // For unknown policies, use JSON
-      setValue(JSON.stringify(policy.value));
+      startTransition(() => setValue(JSON.stringify(policy.value)));
     }
   }, [innerValue, policy.key, config]);
 
