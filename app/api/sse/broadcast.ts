@@ -2,8 +2,13 @@
 // Uses global to persist clients Set
 
 declare global {
-  // eslint-disable-next-line no-var
+
   var __sseClients: Set<ReadableStreamDefaultController> | undefined;
+}
+
+interface SSEData {
+  type: string;
+  [key: string]: unknown;
 }
 
 // Use global to persist clients across hot reloads
@@ -13,7 +18,7 @@ if (!global.__sseClients) {
 }
 
 // Broadcast to all connected SSE clients
-export function broadcastSSE(data: any) {
+export function broadcastSSE(data: SSEData) {
   const message = `data: ${JSON.stringify(data)}\n\n`;
   console.log('[SSE Broadcast]', data.type, 'to', sseClients.size, 'clients');
   sseClients.forEach(controller => {

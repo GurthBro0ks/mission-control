@@ -352,7 +352,7 @@ export default function MemoryPage() {
       <div style={{ fontFamily: 'monospace', fontSize: '13px' }}>
         {lines.map((line, idx) => {
           // Highlight comments
-          let displayLine = line;
+          const displayLine = line;
           const commentIdx = line.indexOf('#');
           let beforeComment = line;
           let comment = '';

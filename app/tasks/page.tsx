@@ -450,7 +450,7 @@ export default function TasksPage() {
                 <label style={{ display: 'block', color: '#6b7280', fontSize: '12px', marginBottom: '4px' }}>Priority</label>
                 <select
                   value={editingTask.priority}
-                  onChange={e => setEditingTask({ ...editingTask, priority: e.target.value as any })}
+                  onChange={e => setEditingTask({ ...editingTask, priority: e.target.value as 'low' | 'medium' | 'high' })}
                   style={{ width: '100%', background: '#1a1a2e', border: 'none', color: '#e2e8f0', padding: '8px 12px', borderRadius: '4px' }}
                 >
                   <option value="high">🔴 High</option>
@@ -466,7 +466,7 @@ export default function TasksPage() {
                 <label style={{ display: 'block', color: '#6b7280', fontSize: '12px', marginBottom: '4px' }}>Status</label>
                 <select
                   value={editingTask.status}
-                  onChange={e => setEditingTask({ ...editingTask, status: e.target.value as any })}
+                  onChange={e => setEditingTask({ ...editingTask, status: e.target.value as 'todo' | 'in_progress' | 'done' })}
                   style={{ width: '100%', background: '#1a1a2e', border: 'none', color: '#e2e8f0', padding: '8px 12px', borderRadius: '4px' }}
                 >
                   <option value="todo">Queued</option>
@@ -611,7 +611,7 @@ export default function TasksPage() {
                 <label style={{ display: 'block', color: '#6b7280', fontSize: '12px', marginBottom: '4px' }}>Priority</label>
                 <select
                   value={formData.priority}
-                  onChange={e => setFormData({ ...formData, priority: e.target.value as any })}
+                  onChange={e => setFormData({ ...formData, priority: e.target.value as 'low' | 'medium' | 'high' })}
                   style={{ width: '100%', background: '#1a1a2e', border: 'none', color: '#e2e8f0', padding: '8px 12px', borderRadius: '4px' }}
                 >
                   <option value="high">🔴 High</option>

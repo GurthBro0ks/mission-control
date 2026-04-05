@@ -1,6 +1,7 @@
 import si from 'systeminformation';
 import fs from 'fs';
 import { getSteps, getMissions, getProposals } from './ops';
+import { getMessageCount } from './db';
 
 export interface SystemHealth {
   status: string;
@@ -26,7 +27,7 @@ function getAgentCount(): number {
     const teamPath = '/home/slimy/ned-clawd/team.json';
     if (fs.existsSync(teamPath)) {
       const team = JSON.parse(fs.readFileSync(teamPath, 'utf8'));
-      return team.subagents?.filter((a: any) => a.status === 'working').length || 0;
+      return team.subagents?.filter((a: { status: string }) => a.status === 'working').length || 0;
     }
   } catch {}
   return 0;
@@ -45,7 +46,6 @@ function getTaskCount(): number {
 
 function getCommsCount(): number {
   try {
-    const { getMessageCount } = require('./db');
     return getMessageCount();
   } catch {
     return 0;

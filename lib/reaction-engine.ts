@@ -37,7 +37,7 @@ interface ProposalPayload {
  * @param eventData - The data associated with the event
  * @param depth - Current recursion depth (default 0), used to prevent infinite loops
  */
-export async function processReactions(eventType: string, eventData: any, depth: number = 0): Promise<void> {
+export async function processReactions(eventType: string, eventData: Record<string, unknown>, depth: number = 0): Promise<void> {
   // Prevent infinite loops - max depth of 2
   if (depth >= 2) {
     console.log(`Reaction depth limit reached (${depth}), skipping`);
@@ -45,7 +45,7 @@ export async function processReactions(eventType: string, eventData: any, depth:
   }
 
   // Skip if source starts with 'reaction:' to prevent reaction loops
-  if (eventData?.source?.startsWith?.('reaction:')) {
+  if (typeof eventData?.source === 'string' && eventData.source.startsWith('reaction:')) {
     console.log(`Skipping reaction for event from reaction source: ${eventType}`);
     return;
   }

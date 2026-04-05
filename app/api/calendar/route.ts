@@ -64,7 +64,7 @@ export async function GET() {
     const calendar = fileStore.readCalendar();
 
     // Get crontab entries
-    let crons: CalendarEvent[] = [];
+    const crons: CalendarEvent[] = [];
     try {
       const crontab = execSync('crontab -l 2>/dev/null || echo ""', { encoding: 'utf8' });
       const lines = crontab.split('\n').filter(line => 

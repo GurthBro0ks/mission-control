@@ -629,7 +629,7 @@ export function emitEvent(type: string, source?: string, data?: unknown): OpsEve
   const event = queryOpsOne<OpsEvent>('SELECT * FROM ops_events WHERE id = ?', [result.lastInsertRowid as number])!;
 
   // Process reactions asynchronously (fire and forget)
-  processReactions(type, data).catch(err => console.error('Reaction processing error:', err));
+  processReactions(type, data as Record<string, unknown>).catch(err => console.error('Reaction processing error:', err));
 
   return event;
 }
@@ -730,7 +730,7 @@ export function updateTriggerLastFired(id: number): void {
 
 export function updateTrigger(id: number, updates: Partial<Trigger>): Trigger | null {
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: (string | number | null)[] = [];
 
   if (updates.name !== undefined) {
     fields.push('name = ?');
@@ -797,7 +797,7 @@ export function createReaction(
 
 export function updateReaction(id: number, updates: Partial<Reaction>): Reaction | null {
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: (string | number | null)[] = [];
 
   if (updates.source_event !== undefined) {
     fields.push('source_event = ?');
