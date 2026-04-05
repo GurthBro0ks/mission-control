@@ -1,11 +1,11 @@
 # Version Snapshot — mission-control
 
-> Generated: 2026-04-05T13:50:57Z | Host: slimy-nuc1
+> Generated: 2026-04-05T15:53:05Z | Host: slimy-nuc1
 
 ## Git State
 - **Branch:** `main`
-- **HEAD:** `d1cc4a2`
-- **Last commit:** `2026-04-05` — `chore: apply eslint --fix auto-fixes (unused vars, minor fixes)`
+- **HEAD:** `7af55e8`
+- **Last commit:** `2026-04-05` — `docs: scaffold project docs via kb-project-doc-sync.sh`
 - **Remote:** `git@github.com:GurthBro0ks/mission-control.git`
 - **Dirty:** NO
 
