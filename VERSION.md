@@ -1,10 +1,10 @@
 # Version Snapshot — mission-control
 
-> Generated: 2026-04-05T16:11:43Z | Host: slimy-nuc1
+> Generated: 2026-04-05T21:42:36Z | Host: slimy-nuc1
 
 ## Git State
 - **Branch:** `main`
-- **HEAD:** `3e9105d`
+- **HEAD:** `d5bd198`
 - **Last commit:** `2026-04-05` — `docs: auto-sync project docs from slimy-nuc1 2026-04-05`
 - **Remote:** `git@github.com:GurthBro0ks/mission-control.git`
 - **Dirty:** NO
@@ -17,7 +17,7 @@
 
 ## Last Verified
 - **Date:** 2026-04-05
-- **Verification:** `git -C /home/slimy/mission-control log -1 --oneline`
+- **Verification:** `git --no-pager -C /home/slimy/mission-control log -1 --oneline`
 
 ## Host Notes
 - Managed by kb-project-doc-sync.sh automation
