@@ -1,13 +1,13 @@
 # Version Snapshot — mission-control
 
-> Generated: 2026-04-09T11:25:04Z | Host: slimy-nuc1
+> Generated: 2026-04-09T11:46:13Z | Host: slimy-nuc1
 
 ## Git State
 - **Branch:** `main`
-- **HEAD:** `0f9c025`
+- **HEAD:** `12fc26f`
 - **Last commit:** `2026-04-09` — `docs: auto-sync project docs from slimy-nuc1 2026-04-09`
 - **Remote:** `git@github.com:GurthBro0ks/mission-control.git`
-- **Dirty:** NO
+- **Dirty:** YES (1 uncommitted)
 
 ## Runtime
 - **Runtime info:** Node.js package detected; scripts found
