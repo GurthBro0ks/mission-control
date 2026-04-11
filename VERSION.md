@@ -1,10 +1,10 @@
 # Version Snapshot — mission-control
 
-> Generated: 2026-04-11T22:43:04Z | Host: slimy-nuc1
+> Generated: 2026-04-11T22:44:42Z | Host: slimy-nuc1
 
 ## Git State
 - **Branch:** `main`
-- **HEAD:** `1ca8e3c`
+- **HEAD:** `d95a44d`
 - **Last commit:** `2026-04-11` — `docs: auto-sync project docs from slimy-nuc1 2026-04-11`
 - **Remote:** `git@github.com:GurthBro0ks/mission-control.git`
 - **Dirty:** NO
