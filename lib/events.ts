@@ -3,6 +3,7 @@ import { EventEmitter } from 'events';
 // Use global to ensure singleton across Next.js hot reloads and route handlers
 declare global {
    
+  // eslint-disable-next-line no-var
   var __appEmitter: EventEmitter | undefined;
 }
 
