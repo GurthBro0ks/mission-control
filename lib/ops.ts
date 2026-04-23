@@ -21,6 +21,94 @@ db.pragma('cache_size = -8000');
 db.pragma('foreign_keys = ON');
 
 // ============================================
+// Schema Initialization
+// ============================================
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS ops_proposals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT,
+    source TEXT NOT NULL,
+    agent TEXT,
+    priority INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'pending',
+    rejection_reason TEXT,
+    policy_check TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    decided_at TEXT,
+    mission_id INTEGER
+  );
+
+  CREATE TABLE IF NOT EXISTS ops_missions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    proposal_id INTEGER,
+    title TEXT NOT NULL,
+    status TEXT DEFAULT 'pending',
+    assigned_to TEXT,
+    delegated_to TEXT,
+    priority INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    started_at TEXT,
+    completed_at TEXT,
+    result TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS ops_steps (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mission_id INTEGER NOT NULL,
+    step_order INTEGER DEFAULT 0,
+    kind TEXT NOT NULL,
+    description TEXT,
+    status TEXT DEFAULT 'pending',
+    assigned_to TEXT,
+    started_at TEXT,
+    completed_at TEXT,
+    result TEXT,
+    retry_count INTEGER DEFAULT 0,
+    max_retries INTEGER DEFAULT 3,
+    depends_on TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS ops_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    source TEXT,
+    data TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS ops_policy (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    key TEXT UNIQUE NOT NULL,
+    value TEXT NOT NULL,
+    description TEXT,
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS ops_triggers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    condition_type TEXT NOT NULL,
+    config TEXT,
+    cooldown_minutes INTEGER DEFAULT 5,
+    last_fired_at TEXT,
+    enabled INTEGER DEFAULT 1
+  );
+
+  CREATE TABLE IF NOT EXISTS ops_reactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source_event TEXT NOT NULL,
+    target_agent TEXT NOT NULL,
+    reaction_type TEXT NOT NULL,
+    probability REAL DEFAULT 1.0,
+    cooldown_minutes INTEGER DEFAULT 5,
+    last_fired_at TEXT,
+    enabled INTEGER DEFAULT 1
+  );
+`);
+
+// ============================================
 // Database Migration - Add Review Columns
 // ============================================
 
