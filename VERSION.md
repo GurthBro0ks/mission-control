@@ -1,13 +1,13 @@
 # Version Snapshot — mission-control
 
-> Generated: 2026-04-11T22:47:51Z | Host: slimy-nuc1
+> Generated: 2026-04-11T23:14:29Z | Host: slimy-nuc1
 
 ## Git State
 - **Branch:** `main`
-- **HEAD:** `75cad06`
-- **Last commit:** `2026-04-11` — `docs: auto-sync project docs from slimy-nuc1 2026-04-11`
+- **HEAD:** `b106eb1`
+- **Last commit:** `2026-04-11` — `chore: install agent harness from slimy-harness`
 - **Remote:** `git@github.com:GurthBro0ks/mission-control.git`
-- **Dirty:** NO
+- **Dirty:** YES (1 uncommitted)
 
 ## Runtime
 - **Runtime info:** Node.js package detected; scripts found
