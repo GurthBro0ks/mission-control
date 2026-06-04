@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const config = {
-  matcher: ["/:path*"],
+  matcher: [
+    "/reports",
+    "/reports/sessions",
+    "/reports/sessions/(.*)",
+    "/reports/blockers",
+  ],
 };
 
 export function proxy(request: NextRequest) {
-  if (!request.nextUrl.pathname.startsWith("/reports")) {
-    return NextResponse.next();
-  }
-
   const sessionToken = request.cookies.get("slimy_session")?.value;
   if (sessionToken) {
     return NextResponse.next();
