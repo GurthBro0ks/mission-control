@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getPublicOrigin } from "@/lib/owner-auth";
 
 const MAIN_SITE_ORIGIN = process.env.SLIMY_MAIN_SITE_ORIGIN || "http://127.0.0.1:3000";
 
@@ -14,7 +15,8 @@ export async function POST(request: NextRequest) {
     cache: "no-store",
   });
 
-  const response = NextResponse.redirect(new URL("/login", request.url), { status: 302 });
+  const origin = getPublicOrigin(request);
+  const response = NextResponse.redirect(new URL("/login", origin), { status: 302 });
   const setCookie = upstream.headers.get("set-cookie");
   if (setCookie) response.headers.set("set-cookie", setCookie);
   return response;

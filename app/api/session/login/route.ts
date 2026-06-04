@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getPublicOrigin, sanitizeReturnTo } from "@/lib/owner-auth";
 
 const MAIN_SITE_ORIGIN = process.env.SLIMY_MAIN_SITE_ORIGIN || "http://127.0.0.1:3000";
 
 function getSafeReturnTo(value?: string): string {
-  if (!value || !value.startsWith("/")) return "/reports";
-  return value;
+  return sanitizeReturnTo(value);
 }
 
 export const dynamic = "force-dynamic";
@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
   const setCookie = upstream.headers.get("set-cookie");
 
   if (isForm) {
-    const redirectUrl = new URL(upstream.ok ? returnTo : `/login?error=invalid&returnTo=${encodeURIComponent(returnTo)}`, request.url);
+    const origin = getPublicOrigin(request);
+    const redirectUrl = new URL(upstream.ok ? returnTo : `/login?error=invalid&returnTo=${encodeURIComponent(returnTo)}`, origin);
     const response = NextResponse.redirect(redirectUrl, { status: upstream.ok ? 302 : 303 });
     if (setCookie) response.headers.set("set-cookie", setCookie);
     return response;

@@ -17,6 +17,21 @@ export type OwnerSession = {
   role: string;
 };
 
+export function getPublicOrigin(request: Request): string {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  if (forwardedHost) {
+    const proto = forwardedProto === "https" ? "https" : "http";
+    return `${proto}://${forwardedHost}`;
+  }
+  return new URL(request.url).origin;
+}
+
+export function sanitizeReturnTo(value: string | null | undefined): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/reports";
+  return value;
+}
+
 function getSafeReturnTo(request: Request): string {
   const url = new URL(request.url);
   const returnTo = `${url.pathname}${url.search}`;
@@ -24,8 +39,8 @@ function getSafeReturnTo(request: Request): string {
 }
 
 function buildLoginRedirect(request: Request): NextResponse {
-  const url = new URL(request.url);
-  const loginUrl = new URL("/login", url.origin);
+  const origin = getPublicOrigin(request);
+  const loginUrl = new URL("/login", origin);
   loginUrl.searchParams.set("returnTo", getSafeReturnTo(request));
   return NextResponse.redirect(loginUrl, { status: 302 });
 }

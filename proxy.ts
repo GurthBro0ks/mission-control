@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getPublicOrigin } from "@/lib/owner-auth";
 
 export const config = {
   matcher: [
@@ -15,7 +16,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const loginUrl = new URL("/login", request.url);
+  const origin = getPublicOrigin(request);
+  const loginUrl = new URL("/login", origin);
   const returnTo = `${request.nextUrl.pathname}${request.nextUrl.search}`;
   loginUrl.searchParams.set("returnTo", returnTo);
   return NextResponse.redirect(loginUrl);
