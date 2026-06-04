@@ -2,6 +2,7 @@ import {
   getSessionReport,
   getFailedApproachesForFeature,
   getExampleSessionReport,
+  getHarnessVersionInfo,
 } from '@/lib/reports-data';
 import { renderSessionDetailPage } from '@/lib/reports-renderer';
 
@@ -27,7 +28,8 @@ export async function GET(
       return htmlResponse('Missing filename', 400);
     }
     const decoded = decodeURIComponent(filename);
-    const [report, example] = await Promise.all([
+    const [versionInfo, report, example] = await Promise.all([
+      getHarnessVersionInfo(),
       getSessionReport(decoded),
       getExampleSessionReport(),
     ]);
@@ -40,6 +42,7 @@ export async function GET(
         failedApproaches,
         example,
         filename: decoded,
+        versionInfo,
       }),
     );
   } catch (err) {

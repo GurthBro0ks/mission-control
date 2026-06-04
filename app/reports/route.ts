@@ -1,4 +1,5 @@
 import {
+  getHarnessVersionInfo,
   listSessionReports,
   getFeatureList,
 } from '@/lib/reports-data';
@@ -18,7 +19,8 @@ function htmlResponse(body: string, status: number = 200): Response {
 
 export async function GET(): Promise<Response> {
   try {
-    const [sessions, fl] = await Promise.all([
+    const [versionInfo, sessions, fl] = await Promise.all([
+      getHarnessVersionInfo(),
       listSessionReports(),
       getFeatureList(),
     ]);
@@ -29,6 +31,7 @@ export async function GET(): Promise<Response> {
         blockedCount: buckets.stats.blocked,
         availableCount: buckets.stats.available,
         totalFeatures: buckets.stats.total,
+        versionInfo,
       }),
     );
   } catch (err) {

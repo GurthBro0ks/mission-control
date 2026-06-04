@@ -7,6 +7,7 @@ import type {
   FailedApproachEntry,
   FeatureList,
   FeatureListEntry,
+  HarnessVersionInfo,
   SessionReport,
   SessionReportSummary,
 } from './reports-data';
@@ -146,6 +147,7 @@ function pageShell(opts: {
   title: string;
   body: string;
   nav?: string;
+  footer?: string;
 }): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -161,10 +163,15 @@ function pageShell(opts: {
 <div class="wrap">
 ${opts.nav ?? ''}
 ${opts.body}
-<p class="footer">Harness Reports — internal Tailscale-only surface</p>
+<p class="footer">${opts.footer ?? 'Harness Reports — source: mission-control'}</p>
 </div>
 </body>
 </html>`;
+}
+
+function renderFooter(versionInfo: HarnessVersionInfo | null): string {
+  const version = versionInfo?.version ?? 'unknown';
+  return `Harness Reports v${esc(version)} — source: mission-control — reports synced from NUC1`;
 }
 
 function statusBadgeClass(status: string | null): string {
@@ -203,10 +210,56 @@ const NAV_HTML = `
 </div>
 `;
 
-export function renderIndexPage(opts: { sessionCount: number; blockedCount: number; availableCount: number; totalFeatures: number; }): string {
+function renderVersionPanel(versionInfo: HarnessVersionInfo | null, extra: string): string {
+  if (!versionInfo) {
+    return `<div class="panel"><h3>Version</h3><p class="muted">Harness version metadata not found.</p>${extra}</div>`;
+  }
+
+  const status = versionInfo.status ? `<div class="row-meta">Status: <span class="mono">${esc(versionInfo.status)}</span></div>` : '';
+  const date = versionInfo.date ? `<div class="row-meta">Date: ${esc(versionInfo.date)}</div>` : '';
+  const url = versionInfo.public_report_url ? `<div class="row-meta">Public URL: <a href="${esc(versionInfo.public_report_url)}">${esc(versionInfo.public_report_url)}</a></div>` : '';
+  return `<div class="panel"><h3>Version</h3><div class="row-title">Harness Reports v${esc(versionInfo.version)}</div><div class="row-meta">Source: <span class="mono">${esc(versionInfo.source_path)}</span></div>${status}${date}${url}${extra}</div>`;
+}
+
+function getValidationState(report: SessionReport): { badgeClass: string; label: string; note: string } {
+  const smokeContext = [report.summary, report.tests.details, report.recommendation.risk_notes]
+    .filter((value): value is string => Boolean(value))
+    .some((value) => /smoke/i.test(value));
+
+  if (report.tests.ran === false) {
+    return {
+      badgeClass: 'warn',
+      label: smokeContext ? 'smoke only' : 'tests not run',
+      note: 'tests were not run',
+    };
+  }
+
+  if (report.tests.passed === true) {
+    return { badgeClass: 'pass', label: 'tests pass', note: 'tests passed' };
+  }
+
+  if (report.tests.passed === false) {
+    return { badgeClass: 'fail', label: 'tests fail', note: 'tests failed' };
+  }
+
+  return { badgeClass: 'gray', label: 'tests unknown', note: 'test status unknown' };
+}
+
+function getSchemaVersion(raw: Record<string, unknown>): string | null {
+  const keys = ['schema_version', 'report_schema_version', 'session_report_schema_version', 'version'];
+  for (const key of keys) {
+    const value = raw[key];
+    if (typeof value === 'string' && value.trim()) return value;
+    if (typeof value === 'number') return String(value);
+  }
+  return null;
+}
+
+export function renderIndexPage(opts: { sessionCount: number; blockedCount: number; availableCount: number; totalFeatures: number; versionInfo: HarnessVersionInfo | null; }): string {
   const body = `
 <h1>🧪 Harness Reports</h1>
-<p class="muted">Internal review surface for SlimyAI agent session reports. Mobile-first, no auth (Tailscale-only).</p>
+<p class="muted">Authenticated review surface for SlimyAI agent session reports.</p>
+${renderVersionPanel(opts.versionInfo, '<div class="row-meta">Build/source info: mission-control HTML routes reading synced harness artifacts from NUC1.</div>')}
 <div class="stats">
   <div class="stat"><div class="stat-num">${opts.sessionCount}</div><div class="stat-lbl">Sessions</div></div>
   <div class="stat"><div class="stat-num">${opts.blockedCount}</div><div class="stat-lbl">Blocked</div></div>
@@ -224,15 +277,16 @@ export function renderIndexPage(opts: { sessionCount: number; blockedCount: numb
   </a>
 </div>
 `;
-  return pageShell({ title: 'Harness Reports', body });
+  return pageShell({ title: 'Harness Reports', body, footer: renderFooter(opts.versionInfo) });
 }
 
-export function renderSessionListPage(opts: { sessions: SessionReportSummary[]; dir: string | null; }): string {
+export function renderSessionListPage(opts: { sessions: SessionReportSummary[]; dir: string | null; versionInfo: HarnessVersionInfo | null; }): string {
   let body: string;
   if (opts.sessions.length === 0) {
     body = `
 <h1>📜 Session Reports</h1>
 <p class="muted">No archived session reports found.</p>
+${renderVersionPanel(opts.versionInfo, `<div class="row-meta">Session source path: <span class="mono">${esc(opts.dir ?? '(none)')}</span></div>`)}
 <div class="empty">
   <p>Expected directory: <span class="mono">${esc(opts.dir ?? '(none of the searched locations exist)')}</span></p>
   <p>Searched: <span class="mono">/home/slimy/kb/raw/sessions</span>, <span class="mono">/home/slimy/slimy-kb/raw/sessions</span>, <span class="mono">/home/slimy/kb-game/raw/sessions</span></p>
@@ -258,13 +312,14 @@ ${summary}
     body = `
 <h1>📜 Session Reports</h1>
 <p class="muted">${opts.sessions.length} report${opts.sessions.length === 1 ? '' : 's'}, newest first. Source: <span class="mono">${esc(opts.dir)}</span></p>
+${renderVersionPanel(opts.versionInfo, `<div class="row-meta">Session source path: <span class="mono">${esc(opts.dir ?? '(none)')}</span></div>`)}
 ${rows}
 `;
   }
-  return pageShell({ title: 'Session Reports', body, nav: NAV_HTML });
+  return pageShell({ title: 'Session Reports', body, nav: NAV_HTML, footer: renderFooter(opts.versionInfo) });
 }
 
-export function renderSessionDetailPage(opts: { report: SessionReport | null; failedApproaches: FailedApproachEntry[]; example: SessionReport | null; filename: string; }): string {
+export function renderSessionDetailPage(opts: { report: SessionReport | null; failedApproaches: FailedApproachEntry[]; example: SessionReport | null; filename: string; versionInfo: HarnessVersionInfo | null; }): string {
   const r = opts.report;
   if (!r) {
     const ex = opts.example;
@@ -286,13 +341,18 @@ export function renderSessionDetailPage(opts: { report: SessionReport | null; fa
       body: `
 <h1>📜 Session Not Found</h1>
 <p>Could not load <span class="mono">${esc(opts.filename)}</span> from the session archive. The file may have been rotated, renamed, or not yet created.</p>
+${renderVersionPanel(opts.versionInfo, '')}
 ${exampleBlock}
 `,
       nav: NAV_HTML,
+      footer: renderFooter(opts.versionInfo),
     });
   }
 
   const badge = `<span class="badge ${statusBadgeClass(r.status)}">${esc(r.status ?? 'unknown')}</span>`;
+  const validation = getValidationState(r);
+  const testsBadge = `<span class="badge ${validation.badgeClass}">${esc(validation.label)}</span>`;
+  const schemaVersion = getSchemaVersion(r.raw);
   const changesList =
     r.changes.length > 0
       ? `<ul>${r.changes.map((c) => `<li class="mono">${esc(c)}</li>`).join('')}</ul>`
@@ -306,7 +366,6 @@ ${exampleBlock}
           )
           .join('')}</ul>`
       : '<p class="muted">No blockers reported.</p>';
-  const testsBadge = r.tests.passed === true ? '<span class="badge pass">tests pass</span>' : r.tests.passed === false ? '<span class="badge fail">tests fail</span>' : '<span class="badge gray">tests unknown</span>';
   const faBlock =
     opts.failedApproaches.length > 0
       ? `
@@ -348,6 +407,8 @@ ${r.recommendation.risk_notes ? `<p class="muted"><strong>Risk:</strong> ${esc(r
   <h3>Summary</h3>
   <p>${esc(r.summary ?? '(no summary)')}</p>
   ${testsBadge}
+  <div class="row-meta">Session report schema/version: <span class="mono">${esc(schemaVersion ?? 'not provided')}</span></div>
+  <div class="row-meta">Report source: <span class="mono">${esc(r.filepath)}</span></div>
 </div>
 
 <h2>Work Done</h2>
@@ -355,7 +416,7 @@ ${r.recommendation.risk_notes ? `<p class="muted"><strong>Risk:</strong> ${esc(r
 
 <h2>Validation</h2>
 <div class="panel">
-  <p>${testsBadge} ${r.tests.ran ? 'tests were run' : 'tests were not run'}</p>
+  <p>${testsBadge} ${esc(validation.note)}</p>
   ${r.tests.details ? `<pre>${esc(r.tests.details)}</pre>` : '<p class="muted">No test details recorded.</p>'}
 </div>
 
@@ -375,7 +436,7 @@ ${faBlock ? `<h2>Failed Approaches</h2><div class="panel">${faBlock}</div>` : ''
 <pre>${esc(rawJson)}</pre>
 </details>
 `;
-  return pageShell({ title: `${r.feature_id ?? r.filename} — Session Report`, body, nav: NAV_HTML });
+  return pageShell({ title: `${r.feature_id ?? r.filename} — Session Report`, body, nav: NAV_HTML, footer: renderFooter(opts.versionInfo) });
 }
 
 export function renderBlockersPage(opts: {
@@ -384,6 +445,7 @@ export function renderBlockersPage(opts: {
   available: FeatureListEntry[];
   stats: { total: number; completed: number; blocked: number; available: number };
   blockerReport: string | null;
+  versionInfo: HarnessVersionInfo | null;
 }): string {
   const renderRow = (f: FeatureListEntry, prefix: string) => {
     const blockedBy = Array.isArray(f.blocked_by) ? f.blocked_by.join(', ') : f.blocked_by ?? '';
@@ -403,6 +465,7 @@ ${blockedBy ? `<div class="row-meta muted">blocked by: ${esc(blockedBy)}</div>` 
   const body = `
 <h1>🚧 Blocker Dashboard</h1>
 <p class="muted">Source of truth: <span class="mono">feature_list.json</span> (with optional <span class="mono">blocker-report.md</span> shown below).</p>
+${renderVersionPanel(opts.versionInfo, '<div class="row-meta">Blocker source path: <span class="mono">/home/slimy/feature_list.json</span></div>')}
 <div class="stats">
   <div class="stat"><div class="stat-num">${opts.stats.blocked}</div><div class="stat-lbl">Blocked</div></div>
   <div class="stat"><div class="stat-num">${opts.stats.available}</div><div class="stat-lbl">Available</div></div>
@@ -418,7 +481,7 @@ ${
     : ''
 }
 `;
-  return pageShell({ title: 'Blocker Dashboard', body, nav: NAV_HTML });
+  return pageShell({ title: 'Blocker Dashboard', body, nav: NAV_HTML, footer: renderFooter(opts.versionInfo) });
 }
 
 export function computeBlockerBuckets(fl: FeatureList | null): {

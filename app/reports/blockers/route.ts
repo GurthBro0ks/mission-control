@@ -1,6 +1,7 @@
 import {
   getFeatureList,
   getBlockerReport,
+  getHarnessVersionInfo,
 } from '@/lib/reports-data';
 import { computeBlockerBuckets, renderBlockersPage } from '@/lib/reports-renderer';
 
@@ -18,7 +19,8 @@ function htmlResponse(body: string, status: number = 200): Response {
 
 export async function GET(): Promise<Response> {
   try {
-    const [fl, blockerReport] = await Promise.all([
+    const [versionInfo, fl, blockerReport] = await Promise.all([
+      getHarnessVersionInfo(),
       getFeatureList(),
       getBlockerReport(),
     ]);
@@ -30,6 +32,7 @@ export async function GET(): Promise<Response> {
         available: buckets.available,
         stats: buckets.stats,
         blockerReport,
+        versionInfo,
       }),
     );
   } catch (err) {

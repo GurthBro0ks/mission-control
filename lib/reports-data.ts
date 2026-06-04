@@ -24,6 +24,14 @@ const BLOCKER_REPORT_PATHS = [
   '/home/slimy/slimy-harness/blocker-report.md',
 ];
 
+const HARNESS_VERSION_JSON_PATHS = [
+  '/home/slimy/slimy-harness/version.json',
+];
+
+const HARNESS_VERSION_FILE_PATHS = [
+  '/home/slimy/slimy-harness/VERSION',
+];
+
 const SESSION_REPORT_EXAMPLE =
   '/home/slimy/slimy-harness/sequencer/session-report.example.json';
 
@@ -99,6 +107,15 @@ export interface FailedApproachEntry {
 export interface FailedApproaches {
   version?: number;
   entries: FailedApproachEntry[];
+}
+
+export interface HarnessVersionInfo {
+  name: string;
+  version: string;
+  status: string | null;
+  date: string | null;
+  public_report_url: string | null;
+  source_path: string;
 }
 
 async function pathExists(p: string): Promise<boolean> {
@@ -293,6 +310,48 @@ export async function getBlockerReport(): Promise<string | null> {
       }
     }
   }
+  return null;
+}
+
+export async function getHarnessVersionInfo(): Promise<HarnessVersionInfo | null> {
+  for (const p of HARNESS_VERSION_JSON_PATHS) {
+    if (!(await pathExists(p))) continue;
+    try {
+      const text = await fs.readFile(p, 'utf8');
+      const data = JSON.parse(text) as Record<string, unknown>;
+      const version = typeof data.version === 'string' ? data.version : null;
+      if (!version) continue;
+      return {
+        name: typeof data.name === 'string' ? data.name : 'slimy-harness',
+        version,
+        status: typeof data.status === 'string' ? data.status : null,
+        date: typeof data.date === 'string' ? data.date : null,
+        public_report_url: typeof data.public_report_url === 'string' ? data.public_report_url : null,
+        source_path: p,
+      };
+    } catch {
+      // ignore
+    }
+  }
+
+  for (const p of HARNESS_VERSION_FILE_PATHS) {
+    if (!(await pathExists(p))) continue;
+    try {
+      const version = (await fs.readFile(p, 'utf8')).trim();
+      if (!version) continue;
+      return {
+        name: 'slimy-harness',
+        version,
+        status: null,
+        date: null,
+        public_report_url: null,
+        source_path: p,
+      };
+    } catch {
+      // ignore
+    }
+  }
+
   return null;
 }
 
