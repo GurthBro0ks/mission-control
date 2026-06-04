@@ -4,6 +4,7 @@ import {
   getExampleSessionReport,
   getHarnessVersionInfo,
 } from '@/lib/reports-data';
+import { requireOwnerReportAccess } from '@/lib/owner-auth';
 import { renderSessionDetailPage } from '@/lib/reports-renderer';
 
 export const dynamic = 'force-dynamic';
@@ -19,10 +20,13 @@ function htmlResponse(body: string, status: number = 200): Response {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ filename: string }> },
 ): Promise<Response> {
   try {
+    const auth = await requireOwnerReportAccess(request);
+    if ('response' in auth) return auth.response;
+
     const { filename } = await params;
     if (!filename || filename.length === 0) {
       return htmlResponse('Missing filename', 400);
@@ -51,4 +55,11 @@ export async function GET(
       500,
     );
   }
+}
+
+export async function HEAD(
+  request: Request,
+  context: { params: Promise<{ filename: string }> },
+): Promise<Response> {
+  return GET(request, context);
 }
