@@ -4,9 +4,7 @@ import { getPublicOrigin } from "@/lib/owner-auth";
 export const config = {
   matcher: [
     "/reports",
-    "/reports/sessions",
-    "/reports/sessions/(.*)",
-    "/reports/blockers",
+    "/reports/:path*",
   ],
 };
 
