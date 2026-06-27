@@ -1,7 +1,5 @@
 // Pure HTML rendering helpers for the Harness Reports routes.
 // All output is mobile-first, inline-CSS, no external assets, no JS.
-// The shell-less layout is intentional: these pages are Tailscale-only
-// review surfaces, separate from the Mission Control dashboard.
 
 import type {
   FailedApproachEntry,
@@ -36,7 +34,7 @@ const CSS = `
     line-height: 1.5;
     -webkit-text-size-adjust: 100%;
   }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 16px; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 16px; }
   h1 { font-size: 22px; line-height: 1.25; margin: 0 0 12px; word-wrap: break-word; }
   h2 { font-size: 18px; line-height: 1.3; margin: 20px 0 8px; color: var(--accent); }
   h3 { font-size: 15px; line-height: 1.3; margin: 12px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -110,13 +108,37 @@ const CSS = `
   ul { margin: 4px 0 8px; padding-left: 22px; }
   li { margin: 2px 0; word-wrap: break-word; }
   hr { border: 0; border-top: 1px solid var(--border); margin: 16px 0; }
-  .nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .top-shell {
+    background: linear-gradient(135deg, rgba(19,26,46,.98), rgba(11,16,32,.98));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .shell-kicker {
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    margin: 0 0 2px;
+    text-transform: uppercase;
+  }
+  .shell-row { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 10px; }
+  .shell-title { margin: 0; font-size: 24px; line-height: 1.15; }
+  .shell-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+  .nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .nav a {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 6px 10px;
     font-size: 13px;
+  }
+  .nav a.active {
+    background: rgba(125, 211, 252, .16);
+    border-color: var(--accent);
+    color: #e0f7ff;
+    font-weight: 700;
   }
   .empty {
     text-align: center;
@@ -146,7 +168,7 @@ function esc(value: unknown): string {
 function pageShell(opts: {
   title: string;
   body: string;
-  nav?: string;
+  activeNav: ReportNavActive;
   footer?: string;
 }): string {
   return `<!DOCTYPE html>
@@ -161,12 +183,39 @@ function pageShell(opts: {
 </head>
 <body>
 <div class="wrap">
-${opts.nav ?? ''}
+${renderReportShell(opts.activeNav)}
 ${opts.body}
 <p class="footer">${opts.footer ?? 'Harness Reports — source: mission-control'}</p>
 </div>
 </body>
 </html>`;
+}
+
+type ReportNavActive = 'index' | 'sessions' | 'blockers';
+
+function navLink(href: string, label: string, active: boolean): string {
+  return `<a href="${esc(href)}"${active ? ' class="active" aria-current="page"' : ''}>${esc(label)}</a>`;
+}
+
+function renderReportShell(active: ReportNavActive): string {
+  return `
+<header class="top-shell">
+  <div class="shell-row">
+    <div>
+      <p class="shell-kicker">Habitat Harness</p>
+      <h1 class="shell-title">Mission-Control Reports</h1>
+      <p class="shell-subtitle">Owner-gated session reports synced from the SlimyAI harness.</p>
+    </div>
+  </div>
+  <nav class="nav" aria-label="Harness report navigation">
+    ${navLink('/reports', 'Index', active === 'index')}
+    ${navLink('/reports/sessions', 'Sessions', active === 'sessions')}
+    ${navLink('/reports/blockers', 'Blockers', active === 'blockers')}
+    ${navLink('https://habitat.slimyai.xyz/harness', 'Habitat /harness', false)}
+    ${navLink('https://habitat.slimyai.xyz/', 'Repo Dashboard', false)}
+    ${navLink('/api/session/logout?returnTo=https%3A%2F%2Fhabitat.slimyai.xyz%2Flogin', 'Sign out', false)}
+  </nav>
+</header>`;
 }
 
 function renderFooter(versionInfo: HarnessVersionInfo | null): string {
@@ -201,14 +250,6 @@ function formatDuration(min: number | null): string {
   const m = min % 60;
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
-
-const NAV_HTML = `
-<div class="nav">
-  <a href="/reports">Index</a>
-  <a href="/reports/sessions">Sessions</a>
-  <a href="/reports/blockers">Blockers</a>
-</div>
-`;
 
 function renderVersionPanel(versionInfo: HarnessVersionInfo | null, extra: string): string {
   if (!versionInfo) {
@@ -277,7 +318,7 @@ ${renderVersionPanel(opts.versionInfo, '<div class="row-meta">Build/source info:
   </a>
 </div>
 `;
-  return pageShell({ title: 'Harness Reports', body, footer: renderFooter(opts.versionInfo) });
+  return pageShell({ title: 'Harness Reports', body, activeNav: 'index', footer: renderFooter(opts.versionInfo) });
 }
 
 export function renderSessionListPage(opts: { sessions: SessionReportSummary[]; dir: string | null; versionInfo: HarnessVersionInfo | null; }): string {
@@ -316,7 +357,7 @@ ${renderVersionPanel(opts.versionInfo, `<div class="row-meta">Session source pat
 ${rows}
 `;
   }
-  return pageShell({ title: 'Session Reports', body, nav: NAV_HTML, footer: renderFooter(opts.versionInfo) });
+  return pageShell({ title: 'Session Reports', body, activeNav: 'sessions', footer: renderFooter(opts.versionInfo) });
 }
 
 export function renderSessionDetailPage(opts: { report: SessionReport | null; failedApproaches: FailedApproachEntry[]; example: SessionReport | null; filename: string; versionInfo: HarnessVersionInfo | null; }): string {
@@ -344,7 +385,7 @@ export function renderSessionDetailPage(opts: { report: SessionReport | null; fa
 ${renderVersionPanel(opts.versionInfo, '')}
 ${exampleBlock}
 `,
-      nav: NAV_HTML,
+      activeNav: 'sessions',
       footer: renderFooter(opts.versionInfo),
     });
   }
@@ -436,7 +477,7 @@ ${faBlock ? `<h2>Failed Approaches</h2><div class="panel">${faBlock}</div>` : ''
 <pre>${esc(rawJson)}</pre>
 </details>
 `;
-  return pageShell({ title: `${r.feature_id ?? r.filename} — Session Report`, body, nav: NAV_HTML, footer: renderFooter(opts.versionInfo) });
+  return pageShell({ title: `${r.feature_id ?? r.filename} — Session Report`, body, activeNav: 'sessions', footer: renderFooter(opts.versionInfo) });
 }
 
 export function renderBlockersPage(opts: {
@@ -481,7 +522,7 @@ ${
     : ''
 }
 `;
-  return pageShell({ title: 'Blocker Dashboard', body, nav: NAV_HTML, footer: renderFooter(opts.versionInfo) });
+  return pageShell({ title: 'Blocker Dashboard', body, activeNav: 'blockers', footer: renderFooter(opts.versionInfo) });
 }
 
 export function computeBlockerBuckets(fl: FeatureList | null): {
