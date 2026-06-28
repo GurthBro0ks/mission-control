@@ -38,7 +38,7 @@ function getSharedSessionCookieDomain(request: NextRequest): string | null {
   if (host === "slimyai.xyz" || host.endsWith(".slimyai.xyz")) {
     return SHARED_SESSION_DOMAIN;
   }
-  return null;
+  return SHARED_SESSION_DOMAIN;
 }
 
 function clearCookie(

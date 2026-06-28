@@ -41,8 +41,11 @@ assert.match(habitatAuth, /return null/, "Habitat session verification fails clo
 
 const ownerAuth = read("lib/owner-auth.ts");
 assert.match(ownerAuth, /verifyHabitatOwnerSession/, "report gate verifies Habitat sessions through GH Tracker");
+assert.match(ownerAuth, /if \(habitatSessionToken\)/, "report gate only attempts Habitat verification when the shared cookie is present");
+assert.match(ownerAuth, /if \(habitatSession\)/, "report gate accepts only verified Habitat owner sessions");
 assert.match(ownerAuth, /REPORT_SESSION_COOKIE = "slimy_session"/, "report gate keeps Slimy session support");
 assert.doesNotMatch(ownerAuth, /cookie\.includes\("slimy_session="/, "report gate does not rely on substring cookie checks");
+assert.doesNotMatch(ownerAuth, /owner:\s*\{[\s\S]{0,200}habitatSessionToken/, "report gate never trusts the raw Habitat cookie string as an owner session");
 
 const logout = read("app/api/session/logout/route.ts");
 assert.match(logout, /REPORT_SESSION_COOKIE = "slimy_session"/, "logout names report session cookie");
@@ -52,6 +55,7 @@ assert.match(logout, /export async function POST/, "logout keeps POST flow");
 assert.match(logout, /clearCookie\(response, REPORT_SESSION_COOKIE/, "logout explicitly clears report cookie");
 assert.match(logout, /clearCookie\(response, HABITAT_SESSION_COOKIE/, "logout explicitly clears Habitat cookie");
 assert.match(logout, /SHARED_SESSION_DOMAIN = "\.slimyai\.xyz"/, "logout clears shared parent-domain cookies");
+assert.match(logout, /return SHARED_SESSION_DOMAIN/, "secure logout clears parent-domain cookies even if proxy host is internal");
 assert.match(logout, /https:\/\/habitat\.slimyai\.xyz/, "logout allows safe return to Habitat login");
 
 const renderer = read("lib/reports-renderer.ts");
