@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logHarnessSsoBreadcrumb } from "@/lib/harness-sso-breadcrumb";
 import { verifyHabitatSsoTicket } from "@/lib/habitat-auth";
 import { getPublicOrigin, sanitizeReturnTo } from "@/lib/owner-auth";
 import {
@@ -43,6 +44,14 @@ export async function GET(request: NextRequest) {
   const returnUrl = normalizeReportsReturnUrl(request.nextUrl.searchParams.get("returnTo"));
 
   if (!ticket) {
+    logHarnessSsoBreadcrumb("consume", {
+      consume_seen: "yes",
+      ticket_seen: "no",
+      verify_response_valid: "no",
+      verify_reason: "missing",
+      report_session_cookie_set: "no",
+      return_to_class: "reports_allowlisted",
+    });
     return loginRedirect(request, returnUrl);
   }
 
@@ -53,6 +62,15 @@ export async function GET(request: NextRequest) {
   );
 
   if (!verification.valid || !verification.owner || !verification.returnToAllowed) {
+    logHarnessSsoBreadcrumb("consume", {
+      consume_seen: "yes",
+      ticket_seen: "yes",
+      verify_response_valid: "no",
+      verify_reason: verification.reason,
+      verify_status_code: verification.statusCode,
+      report_session_cookie_set: "no",
+      return_to_class: "reports_allowlisted",
+    });
     return loginRedirect(request, returnUrl);
   }
 
@@ -72,6 +90,18 @@ export async function GET(request: NextRequest) {
     sameSite: "lax",
     path: "/",
     maxAge: REPORT_SESSION_MAX_AGE_SECONDS,
+  });
+  logHarnessSsoBreadcrumb("consume", {
+    consume_seen: "yes",
+    ticket_seen: "yes",
+    verify_response_valid: "yes",
+    verify_reason: "ok",
+    verify_status_code: verification.statusCode,
+    report_session_cookie_set: "yes",
+    report_session_cookie_name: REPORT_SESSION_COOKIE,
+    report_session_cookie_domain: "host-only",
+    report_session_cookie_ttl_seconds: REPORT_SESSION_MAX_AGE_SECONDS,
+    return_to_class: "reports_allowlisted",
   });
   return response;
 }

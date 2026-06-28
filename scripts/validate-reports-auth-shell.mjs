@@ -34,16 +34,22 @@ assert.match(proxy, /x-mission-control-pathname/, "proxy marks login requests fo
 
 const habitatAuth = read("lib/habitat-auth.ts");
 assert.match(habitatAuth, /HABITAT_SITE_ORIGIN/, "Habitat auth origin is explicit");
+assert.match(habitatAuth, /"https:\/\/habitat\.slimyai\.xyz"/, "Habitat verifier default uses public Habitat origin, not NUC-local localhost");
+assert.doesNotMatch(habitatAuth, /"http:\/\/127\.0\.0\.1:5055"/, "Habitat verifier default does not point at NUC2 localhost");
 assert.match(habitatAuth, /\/api\/reports\/sso-ticket\/verify/, "Habitat ticket verification delegates to GH Tracker verifier endpoint");
 assert.match(habitatAuth, /method: "POST"/, "Habitat ticket verification uses server-side POST");
 assert.match(habitatAuth, /JSON\.stringify\(\{ ticket, returnTo \}\)/, "Habitat ticket verification sends ticket server-side only");
 assert.match(habitatAuth, /valid: upstream\.ok && data\.valid === true/, "Habitat ticket verification requires upstream valid=true");
 assert.match(habitatAuth, /owner: data\.owner === true/, "Habitat ticket verification requires owner=true");
 assert.match(habitatAuth, /returnToAllowed: data\.returnToAllowed === true/, "Habitat ticket verification requires allowlisted returnTo");
+assert.match(habitatAuth, /reason: verificationReason\(upstream, data\)/, "Habitat ticket verification exposes safe reason codes");
 assert.doesNotMatch(habitatAuth, /console\.(log|warn|error)/, "Habitat ticket verifier does not log ticket values");
 
 const ownerAuth = read("lib/owner-auth.ts");
 assert.match(ownerAuth, /verifyReportSessionToken/, "report gate verifies Mission-Control report sessions locally");
+assert.match(ownerAuth, /logHarnessSsoBreadcrumb/, "report gate emits safe auth breadcrumbs");
+assert.match(ownerAuth, /report_auth_reason: "ok"/, "report gate logs accepted report sessions safely");
+assert.match(ownerAuth, /report_auth_reason: "invalid"/, "report gate logs invalid report sessions safely");
 assert.match(ownerAuth, /if \(!reportSessionToken\)/, "report gate blocks requests without report session cookie");
 assert.match(ownerAuth, /if \(reportSession\)/, "report gate accepts only valid local report sessions before legacy fallback");
 assert.match(ownerAuth, /REPORT_SESSION_COOKIE/, "report gate keeps Slimy session support");
@@ -59,6 +65,11 @@ assert.match(reportSession, /session\.exp < Math\.floor\(Date\.now\(\) \/ 1000\)
 
 const consumeSso = read("app/api/session/consume-sso/route.ts");
 assert.match(consumeSso, /verifyHabitatSsoTicket/, "consume endpoint verifies tickets server-to-server");
+assert.match(consumeSso, /logHarnessSsoBreadcrumb/, "consume endpoint emits safe SSO breadcrumbs");
+assert.match(consumeSso, /consume_seen: "yes"/, "consume endpoint logs route hit safely");
+assert.match(consumeSso, /verify_response_valid: "yes"/, "consume endpoint logs successful verification safely");
+assert.match(consumeSso, /report_session_cookie_set: "yes"/, "consume endpoint logs cookie-set boolean safely");
+assert.match(consumeSso, /report_session_cookie_domain: "host-only"/, "consume endpoint logs host-only cookie domain safely");
 assert.match(consumeSso, /normalizeReportsReturnUrl/, "consume endpoint normalizes return targets");
 assert.match(consumeSso, /parsed\.origin === REPORTS_ORIGIN && parsed\.pathname\.startsWith\("\/reports"\)/, "consume endpoint allowlists Harness Reports descendants");
 assert.match(consumeSso, /if \(!ticket\)/, "consume endpoint blocks missing tickets");
@@ -69,6 +80,10 @@ assert.match(consumeSso, /secure: true/, "consume report session cookie is Secur
 assert.match(consumeSso, /sameSite: "lax"/, "consume report session cookie uses SameSite=Lax");
 assert.match(consumeSso, /path: "\/"/, "consume report session cookie is path-wide");
 assert.doesNotMatch(consumeSso, /console\.(log|warn|error)/, "consume endpoint does not log ticket values");
+
+const breadcrumb = read("lib/harness-sso-breadcrumb.ts");
+assert.match(breadcrumb, /LONG_SECRET_SHAPED_VALUE/, "breadcrumb helper blocks secret-shaped values");
+assert.match(breadcrumb, /\[redacted\]/, "breadcrumb helper redacts unsafe values");
 
 const logout = read("app/api/session/logout/route.ts");
 assert.match(logout, /REPORT_SESSION_COOKIE = "slimy_session"/, "logout names report session cookie");
@@ -113,5 +128,9 @@ const loginPage = read("app/login/page.tsx");
 assert.match(loginPage, /Harness Reports Access/, "login page title is report-specific");
 assert.match(loginPage, /title: "Harness Reports Access"/, "login page metadata is report-specific");
 assert.doesNotMatch(loginPage, /SLIMYAI MISSION CONTROL/, "login page does not render old Mission Control title");
+
+assert.match(proxy, /logHarnessSsoBreadcrumb/, "reports proxy emits safe auth breadcrumbs");
+assert.match(proxy, /report_auth_reason: "missing"/, "reports proxy logs missing report cookie safely");
+assert.match(proxy, /report_auth_reason: "proxy_cookie_seen"/, "reports proxy logs cookie presence without values");
 
 console.log("PASS reports auth/session shell invariants");

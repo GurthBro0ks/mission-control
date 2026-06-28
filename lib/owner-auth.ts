@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logHarnessSsoBreadcrumb } from "@/lib/harness-sso-breadcrumb";
 import { REPORT_SESSION_COOKIE, verifyReportSessionToken } from "@/lib/report-session";
 
 const MAIN_SITE_ORIGIN = process.env.SLIMY_MAIN_SITE_ORIGIN || "http://127.0.0.1:3000";
@@ -65,11 +66,21 @@ export async function requireOwnerReportAccess(
   const reportSessionToken = cookieMap.get(REPORT_SESSION_COOKIE);
 
   if (!reportSessionToken) {
+    logHarnessSsoBreadcrumb("reports_auth", {
+      report_session_seen: "no",
+      report_auth_reason: "missing",
+      report_auth_accepted: "no",
+    });
     return { response: buildLoginRedirect(request) };
   }
 
   const reportSession = verifyReportSessionToken(reportSessionToken);
   if (reportSession) {
+    logHarnessSsoBreadcrumb("reports_auth", {
+      report_session_seen: "yes",
+      report_auth_reason: "ok",
+      report_auth_accepted: "yes",
+    });
     return {
       owner: {
         id: reportSession.sub,
@@ -79,6 +90,11 @@ export async function requireOwnerReportAccess(
       },
     };
   }
+  logHarnessSsoBreadcrumb("reports_auth", {
+    report_session_seen: "yes",
+    report_auth_reason: "invalid",
+    report_auth_accepted: "no",
+  });
 
   let upstream: Response;
   try {
@@ -92,6 +108,11 @@ export async function requireOwnerReportAccess(
       cache: "no-store",
     });
   } catch {
+    logHarnessSsoBreadcrumb("reports_auth", {
+      report_session_seen: "yes",
+      report_auth_reason: "legacy_unavailable",
+      report_auth_accepted: "no",
+    });
     return {
       response: NextResponse.json(
         { error: "owner_auth_unavailable" },
@@ -101,10 +122,20 @@ export async function requireOwnerReportAccess(
   }
 
   if (upstream.status === 401) {
+    logHarnessSsoBreadcrumb("reports_auth", {
+      report_session_seen: "yes",
+      report_auth_reason: "legacy_unauthorized",
+      report_auth_accepted: "no",
+    });
     return { response: buildLoginRedirect(request) };
   }
 
   if (!upstream.ok) {
+    logHarnessSsoBreadcrumb("reports_auth", {
+      report_session_seen: "yes",
+      report_auth_reason: "legacy_failed",
+      report_auth_accepted: "no",
+    });
     return {
       response: NextResponse.json(
         { error: "owner_auth_failed" },
@@ -115,10 +146,20 @@ export async function requireOwnerReportAccess(
 
   const data = (await upstream.json()) as SessionMeResponse;
   if (!data.authenticated) {
+    logHarnessSsoBreadcrumb("reports_auth", {
+      report_session_seen: "yes",
+      report_auth_reason: "legacy_unauthenticated",
+      report_auth_accepted: "no",
+    });
     return { response: buildLoginRedirect(request) };
   }
 
   if (data.role !== "owner" || !data.id || !data.username || !data.email) {
+    logHarnessSsoBreadcrumb("reports_auth", {
+      report_session_seen: "yes",
+      report_auth_reason: "legacy_forbidden",
+      report_auth_accepted: "no",
+    });
     return {
       response: NextResponse.json(
         { error: "forbidden", message: "Owner access required" },
@@ -127,6 +168,11 @@ export async function requireOwnerReportAccess(
     };
   }
 
+  logHarnessSsoBreadcrumb("reports_auth", {
+    report_session_seen: "yes",
+    report_auth_reason: "legacy_ok",
+    report_auth_accepted: "yes",
+  });
   return {
     owner: {
       id: data.id,
