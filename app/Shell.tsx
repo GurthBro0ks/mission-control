@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { JetBrains_Mono } from "next/font/google";
 import { useState, useEffect } from "react";
 import RoleCard from "@/components/RoleCard";
@@ -80,6 +81,10 @@ export default function Shell({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const [clientPathname, setClientPathname] = useState<string | null>(null);
+  const isLoginPage = clientPathname === "/login";
+  const shouldShowChrome = clientPathname !== null && !isLoginPage;
   const [health, setHealth] = useState<HealthData>({ cpu: 0, ram: 0, disk: 0, workerAlive: false, heartbeatAlive: false });
   const [opsCounts, setOpsCounts] = useState({ active: 0, queued: 0, pending: 0 });
   const [insightsExpanded, setInsightsExpanded] = useState(false);
@@ -89,6 +94,11 @@ export default function Shell({
   const [selectedAgentKey, setSelectedAgentKey] = useState<string | null>(null);
 
   useEffect(() => {
+    setClientPathname(pathname);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!shouldShowChrome) return;
     // Initial fetch
     fetch('/mission-control/api/health')
       .then(r => r.json())
@@ -130,10 +140,11 @@ export default function Shell({
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [shouldShowChrome]);
 
   // Fetch insights data
   useEffect(() => {
+    if (!shouldShowChrome) return;
     // Skip if not in browser
     if (typeof window === 'undefined') return;
 
@@ -199,7 +210,15 @@ export default function Shell({
     // Refresh every 60 seconds
     const interval = setInterval(fetchInsights, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [shouldShowChrome]);
+
+  if (!shouldShowChrome) {
+    return (
+      <html lang="en">
+        <body className={`${jetbrainsMono.variable} font-mono`}>{children}</body>
+      </html>
+    );
+  }
 
   return (
     <html lang="en">

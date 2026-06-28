@@ -1,3 +1,8 @@
+export const metadata = {
+  title: "Harness Reports Access",
+  description: "Owner login for Harness Reports",
+};
+
 type LoginPageProps = {
   searchParams?: Promise<{
     error?: string;

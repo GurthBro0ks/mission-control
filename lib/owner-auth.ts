@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
+import {
+  HABITAT_SESSION_COOKIE,
+  verifyHabitatOwnerSession,
+} from "@/lib/habitat-auth";
 
 const MAIN_SITE_ORIGIN = process.env.SLIMY_MAIN_SITE_ORIGIN || "http://127.0.0.1:3000";
+const REPORT_SESSION_COOKIE = "slimy_session";
 
 type SessionMeResponse = {
   authenticated?: boolean;
@@ -16,6 +21,16 @@ export type OwnerSession = {
   email: string;
   role: string;
 };
+
+function parseCookieHeader(cookieHeader: string): Map<string, string> {
+  const cookies = new Map<string, string>();
+  for (const part of cookieHeader.split(";")) {
+    const [rawName, ...rawValue] = part.trim().split("=");
+    if (!rawName || rawValue.length === 0) continue;
+    cookies.set(rawName, rawValue.join("="));
+  }
+  return cookies;
+}
 
 export function getPublicOrigin(request: Request): string {
   const forwardedHost = request.headers.get("x-forwarded-host");
@@ -49,8 +64,27 @@ export async function requireOwnerReportAccess(
   request: Request,
 ): Promise<{ owner: OwnerSession } | { response: NextResponse }> {
   const cookie = request.headers.get("cookie") || "";
+  const cookieMap = parseCookieHeader(cookie);
+  const habitatSessionToken = cookieMap.get(HABITAT_SESSION_COOKIE);
 
-  if (!cookie.includes("slimy_session=")) {
+  if (habitatSessionToken) {
+    const habitatSession = await verifyHabitatOwnerSession(
+      cookie,
+      request.headers.get("user-agent") || "mission-control-habitat-owner-gate",
+    );
+    if (habitatSession) {
+      return {
+        owner: {
+          id: habitatSession.id,
+          username: habitatSession.email,
+          email: habitatSession.email,
+          role: habitatSession.role,
+        },
+      };
+    }
+  }
+
+  if (!cookieMap.has(REPORT_SESSION_COOKIE)) {
     return { response: buildLoginRedirect(request) };
   }
 
