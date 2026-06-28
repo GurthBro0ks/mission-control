@@ -41,21 +41,31 @@ function getSharedSessionCookieDomain(request: NextRequest): string | null {
   return SHARED_SESSION_DOMAIN;
 }
 
-function clearCookie(
+function serializeClearCookie(
+  name: string,
+  secure: boolean,
+  domain?: string | null,
+) {
+  const attrs = [
+    `${name}=`,
+    "Path=/",
+    "Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+    "Max-Age=0",
+    domain ? `Domain=${domain}` : null,
+    secure ? "Secure" : null,
+    "HttpOnly",
+    "SameSite=Lax",
+  ];
+  return attrs.filter(Boolean).join("; ");
+}
+
+function appendClearCookie(
   response: NextResponse,
   name: string,
   secure: boolean,
   domain?: string | null,
 ) {
-  response.cookies.set(name, "", {
-    httpOnly: true,
-    secure,
-    sameSite: "lax",
-    path: "/",
-    ...(domain ? { domain } : {}),
-    expires: new Date(0),
-    maxAge: 0,
-  });
+  response.headers.append("Set-Cookie", serializeClearCookie(name, secure, domain));
 }
 
 async function logout(request: NextRequest) {
@@ -71,11 +81,11 @@ async function logout(request: NextRequest) {
   const response = NextResponse.redirect(safeReturnUrl(request), { status: 302 });
   const isSecure = request.headers.get("x-forwarded-proto") === "https";
   const sharedDomain = isSecure ? getSharedSessionCookieDomain(request) : null;
-  clearCookie(response, REPORT_SESSION_COOKIE, isSecure);
-  clearCookie(response, HABITAT_SESSION_COOKIE, isSecure);
+  appendClearCookie(response, REPORT_SESSION_COOKIE, isSecure);
+  appendClearCookie(response, HABITAT_SESSION_COOKIE, isSecure);
   if (sharedDomain) {
-    clearCookie(response, REPORT_SESSION_COOKIE, true, sharedDomain);
-    clearCookie(response, HABITAT_SESSION_COOKIE, true, sharedDomain);
+    appendClearCookie(response, REPORT_SESSION_COOKIE, true, sharedDomain);
+    appendClearCookie(response, HABITAT_SESSION_COOKIE, true, sharedDomain);
   }
   const setCookie = upstream.headers.get("set-cookie");
   if (setCookie) response.headers.append("set-cookie", setCookie);

@@ -52,8 +52,10 @@ assert.match(logout, /REPORT_SESSION_COOKIE = "slimy_session"/, "logout names re
 assert.match(logout, /HABITAT_SESSION_COOKIE = "habitat_session"/, "logout names Habitat session cookie");
 assert.match(logout, /export async function GET/, "logout supports browser top-level GET flow");
 assert.match(logout, /export async function POST/, "logout keeps POST flow");
-assert.match(logout, /clearCookie\(response, REPORT_SESSION_COOKIE/, "logout explicitly clears report cookie");
-assert.match(logout, /clearCookie\(response, HABITAT_SESSION_COOKIE/, "logout explicitly clears Habitat cookie");
+assert.match(logout, /appendClearCookie\(response, REPORT_SESSION_COOKIE/, "logout explicitly clears report cookie");
+assert.match(logout, /appendClearCookie\(response, HABITAT_SESSION_COOKIE/, "logout explicitly clears Habitat cookie");
+assert.match(logout, /response\.headers\.append\("Set-Cookie"/, "logout appends explicit duplicate Set-Cookie clear headers");
+assert.match(logout, /serializeClearCookie/, "logout serializes clear headers with duplicate cookie names safely");
 assert.match(logout, /SHARED_SESSION_DOMAIN = "\.slimyai\.xyz"/, "logout clears shared parent-domain cookies");
 assert.match(logout, /return SHARED_SESSION_DOMAIN/, "secure logout clears parent-domain cookies even if proxy host is internal");
 assert.match(logout, /https:\/\/habitat\.slimyai\.xyz/, "logout allows safe return to Habitat login");
