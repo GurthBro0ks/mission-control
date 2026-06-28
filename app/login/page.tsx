@@ -11,7 +11,8 @@ type LoginPageProps = {
 };
 
 function getSafeReturnTo(value?: string): string {
-  if (!value || !value.startsWith("/")) return "/reports";
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/reports";
+  if (!value.startsWith("/reports")) return "/reports";
   return value;
 }
 

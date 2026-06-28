@@ -29,28 +29,46 @@ const proxy = read("proxy.ts");
 assert.match(proxy, /"\/login"/, "proxy includes login route for shell bypass header");
 assert.match(proxy, /"\/reports\/:path\*"/, "proxy protects all report descendants");
 assert.match(proxy, /request\.cookies\.get\("slimy_session"\)/, "proxy checks the report owner session cookie");
-assert.match(proxy, /request\.cookies\.get\("habitat_session"\)/, "proxy allows Habitat owner session cookie through to the route gate");
+assert.doesNotMatch(proxy, /request\.cookies\.get\("habitat_session"\)/, "proxy does not allow direct Habitat cookie report access");
 assert.match(proxy, /x-mission-control-pathname/, "proxy marks login requests for root layout shell bypass");
 
 const habitatAuth = read("lib/habitat-auth.ts");
-assert.match(habitatAuth, /HABITAT_SESSION_COOKIE = "habitat_session"/, "Habitat cookie name is explicit");
 assert.match(habitatAuth, /HABITAT_SITE_ORIGIN/, "Habitat auth origin is explicit");
-assert.match(habitatAuth, /\/api\/auth\/me/, "Habitat session verification delegates to GH Tracker auth metadata endpoint");
-assert.match(habitatAuth, /data\.user\?\.role !== "owner"/, "Habitat session verification requires owner role");
-assert.match(habitatAuth, /return null/, "Habitat session verification fails closed");
+assert.match(habitatAuth, /\/api\/reports\/sso-ticket\/verify/, "Habitat ticket verification delegates to GH Tracker verifier endpoint");
+assert.match(habitatAuth, /method: "POST"/, "Habitat ticket verification uses server-side POST");
+assert.match(habitatAuth, /JSON\.stringify\(\{ ticket, returnTo \}\)/, "Habitat ticket verification sends ticket server-side only");
+assert.match(habitatAuth, /valid: upstream\.ok && data\.valid === true/, "Habitat ticket verification requires upstream valid=true");
+assert.match(habitatAuth, /owner: data\.owner === true/, "Habitat ticket verification requires owner=true");
+assert.match(habitatAuth, /returnToAllowed: data\.returnToAllowed === true/, "Habitat ticket verification requires allowlisted returnTo");
+assert.doesNotMatch(habitatAuth, /console\.(log|warn|error)/, "Habitat ticket verifier does not log ticket values");
 
 const ownerAuth = read("lib/owner-auth.ts");
-assert.match(ownerAuth, /verifyHabitatOwnerSession/, "report gate verifies Habitat sessions through GH Tracker");
-assert.match(ownerAuth, /if \(habitatSessionToken\)/, "report gate only attempts Habitat verification when the shared cookie is present");
-assert.match(ownerAuth, /if \(habitatSession\)/, "report gate accepts only verified Habitat owner sessions");
-assert.ok(
-  ownerAuth.indexOf("if (habitatSessionToken)") < ownerAuth.indexOf("if (!cookieMap.has(REPORT_SESSION_COOKIE))"),
-  "report gate checks the bridge-issued Habitat cookie before falling back to the legacy report cookie",
-);
-assert.match(ownerAuth, /REPORT_SESSION_COOKIE = "slimy_session"/, "report gate keeps Slimy session support");
+assert.match(ownerAuth, /verifyReportSessionToken/, "report gate verifies Mission-Control report sessions locally");
+assert.match(ownerAuth, /if \(!reportSessionToken\)/, "report gate blocks requests without report session cookie");
+assert.match(ownerAuth, /if \(reportSession\)/, "report gate accepts only valid local report sessions before legacy fallback");
+assert.match(ownerAuth, /REPORT_SESSION_COOKIE/, "report gate keeps Slimy session support");
 assert.doesNotMatch(ownerAuth, /cookie\.includes\("slimy_session="/, "report gate does not rely on substring cookie checks");
-assert.doesNotMatch(ownerAuth, /owner:\s*\{[\s\S]{0,200}habitatSessionToken/, "report gate never trusts the raw Habitat cookie string as an owner session");
-assert.match(habitatAuth, /if \(!upstream\.ok\) return null/, "invalid bridge-issued Habitat cookies fail closed in Habitat verifier");
+assert.doesNotMatch(ownerAuth, /habitatSessionToken|verifyHabitatOwnerSession|HABITAT_SESSION_COOKIE/, "report gate never trusts raw Habitat cookies as report access");
+
+const reportSession = read("lib/report-session.ts");
+assert.match(reportSession, /REPORT_SESSION_COOKIE = "slimy_session"/, "local report session cookie name is explicit");
+assert.match(reportSession, /createHmac\("sha256"/, "local report session is HMAC signed");
+assert.match(reportSession, /timingSafeEqual/, "local report session signature comparison is timing-safe");
+assert.match(reportSession, /session\.role !== "owner"/, "local report session requires owner role");
+assert.match(reportSession, /session\.exp < Math\.floor\(Date\.now\(\) \/ 1000\)/, "local report session enforces expiry");
+
+const consumeSso = read("app/api/session/consume-sso/route.ts");
+assert.match(consumeSso, /verifyHabitatSsoTicket/, "consume endpoint verifies tickets server-to-server");
+assert.match(consumeSso, /normalizeReportsReturnUrl/, "consume endpoint normalizes return targets");
+assert.match(consumeSso, /parsed\.origin === REPORTS_ORIGIN && parsed\.pathname\.startsWith\("\/reports"\)/, "consume endpoint allowlists Harness Reports descendants");
+assert.match(consumeSso, /if \(!ticket\)/, "consume endpoint blocks missing tickets");
+assert.match(consumeSso, /!verification\.valid \|\| !verification\.owner \|\| !verification\.returnToAllowed/, "consume endpoint blocks invalid, replayed, expired, or wrong-return tickets");
+assert.match(consumeSso, /response\.cookies\.set\(REPORT_SESSION_COOKIE, token/, "consume endpoint sets Mission-Control report session cookie");
+assert.match(consumeSso, /httpOnly: true/, "consume report session cookie is HttpOnly");
+assert.match(consumeSso, /secure: true/, "consume report session cookie is Secure");
+assert.match(consumeSso, /sameSite: "lax"/, "consume report session cookie uses SameSite=Lax");
+assert.match(consumeSso, /path: "\/"/, "consume report session cookie is path-wide");
+assert.doesNotMatch(consumeSso, /console\.(log|warn|error)/, "consume endpoint does not log ticket values");
 
 const logout = read("app/api/session/logout/route.ts");
 assert.match(logout, /REPORT_SESSION_COOKIE = "slimy_session"/, "logout names report session cookie");

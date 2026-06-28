@@ -1,51 +1,54 @@
-export const HABITAT_SESSION_COOKIE = "habitat_session";
-
 const HABITAT_SITE_ORIGIN = process.env.HABITAT_SITE_ORIGIN || "http://127.0.0.1:5055";
 
-type HabitatMeResponse = {
-  authenticated?: boolean;
-  user?: {
-    id?: string;
-    email?: string;
-    role?: string;
-  };
+export type HabitatSsoTicketVerification = {
+  valid: boolean;
+  owner: boolean;
+  expired: boolean;
+  redeemed: boolean;
+  returnToAllowed: boolean;
 };
 
-export type HabitatOwnerSession = {
-  id: string;
-  email: string;
-  role: "owner";
-};
+type HabitatSsoTicketResponse = Partial<HabitatSsoTicketVerification>;
 
-export async function verifyHabitatOwnerSession(
-  cookieHeader: string,
+export async function verifyHabitatSsoTicket(
+  ticket: string,
+  returnTo: string,
   userAgent: string,
-): Promise<HabitatOwnerSession | null> {
+): Promise<HabitatSsoTicketVerification> {
+  if (!ticket) return invalidVerification();
+
   let upstream: Response;
   try {
-    upstream = await fetch(`${HABITAT_SITE_ORIGIN}/api/auth/me`, {
-      method: "GET",
+    upstream = await fetch(`${HABITAT_SITE_ORIGIN}/api/reports/sso-ticket/verify`, {
+      method: "POST",
       headers: {
-        cookie: cookieHeader,
+        "content-type": "application/json",
         "user-agent": userAgent,
         accept: "application/json",
       },
+      body: JSON.stringify({ ticket, returnTo }),
       cache: "no-store",
     });
   } catch {
-    return null;
+    return invalidVerification();
   }
 
-  if (!upstream.ok) return null;
-
-  const data = (await upstream.json().catch(() => ({}))) as HabitatMeResponse;
-  if (!data.authenticated || data.user?.role !== "owner" || !data.user.id || !data.user.email) {
-    return null;
-  }
-
+  const data = (await upstream.json().catch(() => ({}))) as HabitatSsoTicketResponse;
   return {
-    id: data.user.id,
-    email: data.user.email,
-    role: "owner",
+    valid: upstream.ok && data.valid === true,
+    owner: data.owner === true,
+    expired: data.expired === true,
+    redeemed: data.redeemed === true,
+    returnToAllowed: data.returnToAllowed === true,
+  };
+}
+
+function invalidVerification(): HabitatSsoTicketVerification {
+  return {
+    valid: false,
+    owner: false,
+    expired: false,
+    redeemed: false,
+    returnToAllowed: false,
   };
 }

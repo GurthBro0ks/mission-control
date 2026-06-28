@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
-import {
-  HABITAT_SESSION_COOKIE,
-  verifyHabitatOwnerSession,
-} from "@/lib/habitat-auth";
+import { REPORT_SESSION_COOKIE, verifyReportSessionToken } from "@/lib/report-session";
 
 const MAIN_SITE_ORIGIN = process.env.SLIMY_MAIN_SITE_ORIGIN || "http://127.0.0.1:3000";
-const REPORT_SESSION_COOKIE = "slimy_session";
 
 type SessionMeResponse = {
   authenticated?: boolean;
@@ -44,6 +40,7 @@ export function getPublicOrigin(request: Request): string {
 
 export function sanitizeReturnTo(value: string | null | undefined): string {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return "/reports";
+  if (!value.startsWith("/reports")) return "/reports";
   return value;
 }
 
@@ -65,27 +62,22 @@ export async function requireOwnerReportAccess(
 ): Promise<{ owner: OwnerSession } | { response: NextResponse }> {
   const cookie = request.headers.get("cookie") || "";
   const cookieMap = parseCookieHeader(cookie);
-  const habitatSessionToken = cookieMap.get(HABITAT_SESSION_COOKIE);
+  const reportSessionToken = cookieMap.get(REPORT_SESSION_COOKIE);
 
-  if (habitatSessionToken) {
-    const habitatSession = await verifyHabitatOwnerSession(
-      cookie,
-      request.headers.get("user-agent") || "mission-control-habitat-owner-gate",
-    );
-    if (habitatSession) {
-      return {
-        owner: {
-          id: habitatSession.id,
-          username: habitatSession.email,
-          email: habitatSession.email,
-          role: habitatSession.role,
-        },
-      };
-    }
+  if (!reportSessionToken) {
+    return { response: buildLoginRedirect(request) };
   }
 
-  if (!cookieMap.has(REPORT_SESSION_COOKIE)) {
-    return { response: buildLoginRedirect(request) };
+  const reportSession = verifyReportSessionToken(reportSessionToken);
+  if (reportSession) {
+    return {
+      owner: {
+        id: reportSession.sub,
+        username: reportSession.username,
+        email: reportSession.email,
+        role: reportSession.role,
+      },
+    };
   }
 
   let upstream: Response;

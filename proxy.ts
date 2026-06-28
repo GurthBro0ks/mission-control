@@ -30,8 +30,7 @@ export function proxy(request: NextRequest) {
   }
 
   const sessionToken = request.cookies.get("slimy_session")?.value;
-  const habitatSessionToken = request.cookies.get("habitat_session")?.value;
-  if (sessionToken || habitatSessionToken) {
+  if (sessionToken) {
     return NextResponse.next();
   }
 
