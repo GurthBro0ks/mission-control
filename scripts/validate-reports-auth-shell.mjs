@@ -43,9 +43,14 @@ const ownerAuth = read("lib/owner-auth.ts");
 assert.match(ownerAuth, /verifyHabitatOwnerSession/, "report gate verifies Habitat sessions through GH Tracker");
 assert.match(ownerAuth, /if \(habitatSessionToken\)/, "report gate only attempts Habitat verification when the shared cookie is present");
 assert.match(ownerAuth, /if \(habitatSession\)/, "report gate accepts only verified Habitat owner sessions");
+assert.ok(
+  ownerAuth.indexOf("if (habitatSessionToken)") < ownerAuth.indexOf("if (!cookieMap.has(REPORT_SESSION_COOKIE))"),
+  "report gate checks the bridge-issued Habitat cookie before falling back to the legacy report cookie",
+);
 assert.match(ownerAuth, /REPORT_SESSION_COOKIE = "slimy_session"/, "report gate keeps Slimy session support");
 assert.doesNotMatch(ownerAuth, /cookie\.includes\("slimy_session="/, "report gate does not rely on substring cookie checks");
 assert.doesNotMatch(ownerAuth, /owner:\s*\{[\s\S]{0,200}habitatSessionToken/, "report gate never trusts the raw Habitat cookie string as an owner session");
+assert.match(habitatAuth, /if \(!upstream\.ok\) return null/, "invalid bridge-issued Habitat cookies fail closed in Habitat verifier");
 
 const logout = read("app/api/session/logout/route.ts");
 assert.match(logout, /REPORT_SESSION_COOKIE = "slimy_session"/, "logout names report session cookie");
