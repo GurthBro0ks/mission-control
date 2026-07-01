@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Harness Reports Access",
-  description: "Owner login for Harness Reports",
+  description: "Owner-only login for Harness Reports",
 };
 
 type LoginPageProps = {
@@ -49,21 +49,25 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         }}
       >
         <p style={{ margin: 0, color: "#38bdf8", fontSize: "0.9rem", letterSpacing: ".08em", textTransform: "uppercase" }}>
-          Owner Login
+          Owner-only area
         </p>
-        <h1 style={{ margin: "8px 0 10px", fontSize: "1.8rem" }}>Harness Reports Access</h1>
-        <p style={{ margin: "0 0 18px", color: "#94a3b8", lineHeight: 1.5 }}>
-          Sign in with the same owner account used on <span style={{ color: "#e2e8f0" }}>slimyai.xyz</span>.
+        <h1 style={{ margin: "8px 0 10px", fontSize: "1.8rem" }}>Harness Reports Login</h1>
+        <p id="login-help" style={{ margin: "0 0 10px", color: "#cbd5e1", lineHeight: 1.5 }}>
+          Harness Reports are protected. Sign in with the existing owner account to review private run reports.
+        </p>
+        <p style={{ margin: "0 0 18px", color: "#94a3b8", lineHeight: 1.5, fontSize: "0.95rem" }}>
+          Logged-out visitors can only see this login screen; report content stays hidden until owner access is verified.
         </p>
         {errorMessage ? (
-          <p style={{ margin: "0 0 14px", color: "#fca5a5", fontWeight: 600 }}>{errorMessage}</p>
+          <p role="alert" style={{ margin: "0 0 14px", color: "#fca5a5", fontWeight: 600 }}>{errorMessage}</p>
         ) : null}
-        <form method="post" action="/api/session/login">
+        <form method="post" action="/api/session/login" aria-describedby="login-help">
           <input type="hidden" name="returnTo" value={returnTo} />
-          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.95rem" }}>
+          <label htmlFor="email" style={{ display: "block", marginBottom: "8px", fontSize: "0.95rem" }}>
             Email or Username
           </label>
           <input
+            id="email"
             name="email"
             autoComplete="username"
             required
@@ -77,10 +81,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               marginBottom: "14px",
             }}
           />
-          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.95rem" }}>
+          <label htmlFor="password" style={{ display: "block", marginBottom: "8px", fontSize: "0.95rem" }}>
             Password
           </label>
           <input
+            id="password"
             name="password"
             type="password"
             autoComplete="current-password"

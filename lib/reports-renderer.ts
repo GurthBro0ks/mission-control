@@ -145,6 +145,16 @@ const CSS = `
     padding: 32px 16px;
     color: var(--muted);
   }
+  .empty-title {
+    color: var(--text);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .note {
+    border-left: 3px solid var(--accent);
+    color: var(--muted);
+    padding-left: 10px;
+  }
   .footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 20px; padding-bottom: 8px; }
   @media (max-width: 480px) {
     .wrap { padding: 12px; }
@@ -204,7 +214,7 @@ function renderReportShell(active: ReportNavActive): string {
     <div>
       <p class="shell-kicker">Habitat Harness</p>
       <h1 class="shell-title">Mission-Control Reports</h1>
-      <p class="shell-subtitle">Owner-gated session reports synced from the SlimyAI harness.</p>
+      <p class="shell-subtitle">Owner-gated session reports synced from the SlimyAI harness. Logged-out requests are redirected before report content is rendered.</p>
     </div>
   </div>
   <nav class="nav" aria-label="Harness report navigation">
@@ -253,12 +263,12 @@ function formatDuration(min: number | null): string {
 
 function renderVersionPanel(versionInfo: HarnessVersionInfo | null, extra: string): string {
   if (!versionInfo) {
-    return `<div class="panel"><h3>Version</h3><p class="muted">Harness version metadata not found.</p>${extra}</div>`;
+    return `<div class="panel"><h3>Version</h3><p class="muted">Harness version metadata is not available in the synced artifacts yet.</p>${extra}</div>`;
   }
 
   const status = versionInfo.status ? `<div class="row-meta">Status: <span class="mono">${esc(versionInfo.status)}</span></div>` : '';
   const date = versionInfo.date ? `<div class="row-meta">Date: ${esc(versionInfo.date)}</div>` : '';
-  const url = versionInfo.public_report_url ? `<div class="row-meta">Public URL: <a href="${esc(versionInfo.public_report_url)}">${esc(versionInfo.public_report_url)}</a></div>` : '';
+  const url = versionInfo.public_report_url ? `<div class="row-meta">Configured owner-gated report URL: <a href="${esc(versionInfo.public_report_url)}">${esc(versionInfo.public_report_url)}</a></div>` : '';
   return `<div class="panel"><h3>Version</h3><div class="row-title">Harness Reports v${esc(versionInfo.version)}</div><div class="row-meta">Source: <span class="mono">${esc(versionInfo.source_path)}</span></div>${status}${date}${url}${extra}</div>`;
 }
 
@@ -270,20 +280,22 @@ function getValidationState(report: SessionReport): { badgeClass: string; label:
   if (report.tests.ran === false) {
     return {
       badgeClass: 'warn',
-      label: smokeContext ? 'smoke only' : 'tests not run',
-      note: 'tests were not run',
+      label: smokeContext ? 'SMOKE ONLY' : 'TESTS NOT RUN',
+      note: smokeContext
+        ? 'Smoke verification was recorded, but the report did not run the full test suite.'
+        : 'The report explicitly says tests were not run; this is not a test failure.',
     };
   }
 
   if (report.tests.passed === true) {
-    return { badgeClass: 'pass', label: 'tests pass', note: 'tests passed' };
+    return { badgeClass: 'pass', label: 'TESTS PASS', note: 'Tests passed.' };
   }
 
   if (report.tests.passed === false) {
-    return { badgeClass: 'fail', label: 'tests fail', note: 'tests failed' };
+    return { badgeClass: 'fail', label: 'TESTS FAIL', note: 'Tests ran and reported a failure.' };
   }
 
-  return { badgeClass: 'gray', label: 'tests unknown', note: 'test status unknown' };
+  return { badgeClass: 'gray', label: 'TESTS UNKNOWN', note: 'Test status was not recorded in this report.' };
 }
 
 function getSchemaVersion(raw: Record<string, unknown>): string | null {
@@ -299,8 +311,8 @@ function getSchemaVersion(raw: Record<string, unknown>): string | null {
 export function renderIndexPage(opts: { sessionCount: number; blockedCount: number; availableCount: number; totalFeatures: number; versionInfo: HarnessVersionInfo | null; }): string {
   const body = `
 <h1>🧪 Harness Reports</h1>
-<p class="muted">Authenticated review surface for SlimyAI agent session reports.</p>
-${renderVersionPanel(opts.versionInfo, '<div class="row-meta">Build/source info: mission-control HTML routes reading synced harness artifacts from NUC1.</div>')}
+<p class="muted">Owner-only review surface for SlimyAI agent session reports. Counts below come from synced harness artifacts and do not imply public access.</p>
+${renderVersionPanel(opts.versionInfo, '<div class="row-meta">Build/source info: Mission-Control HTML routes reading synced harness artifacts from NUC1 after owner access is verified.</div>')}
 <div class="stats">
   <div class="stat"><div class="stat-num">${opts.sessionCount}</div><div class="stat-lbl">Sessions</div></div>
   <div class="stat"><div class="stat-num">${opts.blockedCount}</div><div class="stat-lbl">Blocked</div></div>
@@ -310,11 +322,11 @@ ${renderVersionPanel(opts.versionInfo, '<div class="row-meta">Build/source info:
 <div class="panel">
   <a class="row" href="/reports/sessions" style="display:block">
     <div class="row-title">📜 Session Reports</div>
-    <div class="row-meta">${opts.sessionCount} report${opts.sessionCount === 1 ? '' : 's'} archived, newest first. Tap any row for the full detail view (header, work done, validation, failed approaches, next actions, raw JSON).</div>
+    <div class="row-meta">${opts.sessionCount} report${opts.sessionCount === 1 ? '' : 's'} archived, newest first. Open a row for the owner-gated detail view: header, work done, validation, failed approaches, next actions, and raw JSON.</div>
   </a>
   <a class="row" href="/reports/blockers" style="display:block; margin-top: 8px">
     <div class="row-title">🚧 Blocker Dashboard</div>
-    <div class="row-meta">Blocked features, available-for-retry, and dispatch queue, derived from feature_list.json.</div>
+    <div class="row-meta">Blocked features, available-for-retry, and dispatch queue derived from feature_list.json.</div>
   </a>
 </div>
 `;
@@ -329,9 +341,10 @@ export function renderSessionListPage(opts: { sessions: SessionReportSummary[]; 
 <p class="muted">No archived session reports found.</p>
 ${renderVersionPanel(opts.versionInfo, `<div class="row-meta">Session source path: <span class="mono">${esc(opts.dir ?? '(none)')}</span></div>`)}
 <div class="empty">
+  <p class="empty-title">No synced session reports are available yet.</p>
   <p>Expected directory: <span class="mono">${esc(opts.dir ?? '(none of the searched locations exist)')}</span></p>
   <p>Searched: <span class="mono">/home/slimy/kb/raw/sessions</span>, <span class="mono">/home/slimy/slimy-kb/raw/sessions</span>, <span class="mono">/home/slimy/kb-game/raw/sessions</span></p>
-  <p>Once agents write reports, they will appear here automatically.</p>
+  <p>Once an approved notifier or report sync writes session artifacts, they will appear here automatically for signed-in owners.</p>
 </div>
 `;
   } else {
@@ -352,7 +365,7 @@ ${summary}
       .join('\n');
     body = `
 <h1>📜 Session Reports</h1>
-<p class="muted">${opts.sessions.length} report${opts.sessions.length === 1 ? '' : 's'}, newest first. Source: <span class="mono">${esc(opts.dir)}</span></p>
+<p class="muted">${opts.sessions.length} owner-gated report${opts.sessions.length === 1 ? '' : 's'}, newest first. Source: <span class="mono">${esc(opts.dir)}</span></p>
 ${renderVersionPanel(opts.versionInfo, `<div class="row-meta">Session source path: <span class="mono">${esc(opts.dir ?? '(none)')}</span></div>`)}
 ${rows}
 `;
@@ -381,7 +394,8 @@ export function renderSessionDetailPage(opts: { report: SessionReport | null; fa
       title: 'Session Report Not Found',
       body: `
 <h1>📜 Session Not Found</h1>
-<p>Could not load <span class="mono">${esc(opts.filename)}</span> from the session archive. The file may have been rotated, renamed, or not yet created.</p>
+<p>Could not load <span class="mono">${esc(opts.filename)}</span> from the owner-gated session archive. The file may have been rotated, renamed, or not synced yet.</p>
+<p class="note">This page does not expose report content when the requested artifact is missing.</p>
 ${renderVersionPanel(opts.versionInfo, '')}
 ${exampleBlock}
 `,
@@ -397,7 +411,7 @@ ${exampleBlock}
   const changesList =
     r.changes.length > 0
       ? `<ul>${r.changes.map((c) => `<li class="mono">${esc(c)}</li>`).join('')}</ul>`
-      : '<p class="muted">No files listed in this report.</p>';
+      : '<p class="muted">No changed files were listed in this report.</p>';
   const blockersList =
     r.blockers.length > 0
       ? `<ul>${r.blockers
