@@ -272,6 +272,24 @@ function renderVersionPanel(versionInfo: HarnessVersionInfo | null, extra: strin
   return `<div class="panel"><h3>Version</h3><div class="row-title">Harness Reports v${esc(versionInfo.version)}</div><div class="row-meta">Source: <span class="mono">${esc(versionInfo.source_path)}</span></div>${status}${date}${url}${extra}</div>`;
 }
 
+function isPassLikeStatus(status: unknown): boolean {
+  if (typeof status !== 'string') return false;
+  const s = status.toLowerCase();
+  return s === 'completed' || s === 'pass' || s === 'passed' || s === 'success' || s === 'ok';
+}
+
+function isFailLikeStatus(status: unknown): boolean {
+  if (typeof status !== 'string') return false;
+  const s = status.toLowerCase();
+  return s === 'failed' || s === 'fail' || s === 'error' || s === 'cancelled';
+}
+
+function hasLegacyMetadataConflict(report: SessionReport): boolean {
+  const outcomes = [report.status, report.raw.result];
+  if (outcomes.some(isFailLikeStatus)) return false;
+  return report.tests.ran === true && report.tests.passed === false && outcomes.some(isPassLikeStatus);
+}
+
 function getValidationState(report: SessionReport): { badgeClass: string; label: string; note: string } {
   const smokeContext = [report.summary, report.tests.details, report.recommendation.risk_notes]
     .filter((value): value is string => Boolean(value))
@@ -289,6 +307,14 @@ function getValidationState(report: SessionReport): { badgeClass: string; label:
 
   if (report.tests.passed === true) {
     return { badgeClass: 'pass', label: 'TESTS PASS', note: 'Tests passed.' };
+  }
+
+  if (hasLegacyMetadataConflict(report)) {
+    return {
+      badgeClass: 'warn',
+      label: 'LEGACY METADATA CONFLICT',
+      note: 'Archived report metadata says the result passed, but test metadata says tests failed.',
+    };
   }
 
   if (report.tests.passed === false) {
