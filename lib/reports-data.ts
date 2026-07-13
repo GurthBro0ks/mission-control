@@ -61,8 +61,33 @@ export interface SessionReport extends SessionReportSummary {
   tests: {
     ran: boolean | null;
     passed: boolean | null;
+    label: string | null;
     details: string | null;
+    checks: Array<{
+      id: string;
+      name: string;
+      status: string;
+      display: string;
+      passed: number | null;
+      failed: number | null;
+      total: number | null;
+      source_artifact: string;
+    }>;
   };
+  artifacts: {
+    proof_files_total: number;
+    displayed_count: number;
+    displayed_files: string[];
+    filter_explanation: string | null;
+  } | null;
+  next_action: string | null;
+  run_id: string | null;
+  subject_id: string | null;
+  pushed: boolean | null;
+  production_storage_state: string | null;
+  underlying_functional_qa: string | null;
+  manual_qa_status: string | null;
+  operator_qa: string | null;
   blockers: Array<{
     type: string;
     description: string;
@@ -228,10 +253,52 @@ export async function getSessionReport(filename: string): Promise<SessionReport 
       tests: {
         ran: typeof d.tests === 'object' && d.tests !== null && 'ran' in d.tests ? Boolean((d.tests as { ran: unknown }).ran) : null,
         passed: typeof d.tests === 'object' && d.tests !== null && 'passed' in d.tests ? Boolean((d.tests as { passed: unknown }).passed) : null,
+        label: typeof d.tests === 'object' && d.tests !== null && 'label' in d.tests && typeof (d.tests as { label: unknown }).label === 'string'
+          ? (d.tests as { label: string }).label
+          : null,
         details: typeof d.tests === 'object' && d.tests !== null && 'details' in d.tests && typeof (d.tests as { details: unknown }).details === 'string'
           ? (d.tests as { details: string }).details
           : null,
+        checks: typeof d.tests === 'object' && d.tests !== null && 'checks' in d.tests && Array.isArray((d.tests as { checks: unknown }).checks)
+          ? (d.tests as { checks: unknown[] }).checks.map((check) => {
+              const item = check as Record<string, unknown>;
+              return {
+                id: typeof item.id === 'string' ? item.id : 'unknown',
+                name: typeof item.name === 'string' ? item.name : 'Validation check',
+                status: typeof item.status === 'string' ? item.status : 'UNKNOWN',
+                display: typeof item.display === 'string' ? item.display : '',
+                passed: typeof item.passed === 'number' ? item.passed : null,
+                failed: typeof item.failed === 'number' ? item.failed : null,
+                total: typeof item.total === 'number' ? item.total : null,
+                source_artifact: typeof item.source_artifact === 'string' ? item.source_artifact : '',
+              };
+            })
+          : [],
       },
+      artifacts: typeof d.artifacts === 'object' && d.artifacts !== null
+        ? {
+            proof_files_total: typeof (d.artifacts as Record<string, unknown>).proof_files_total === 'number'
+              ? (d.artifacts as { proof_files_total: number }).proof_files_total
+              : 0,
+            displayed_count: typeof (d.artifacts as Record<string, unknown>).displayed_count === 'number'
+              ? (d.artifacts as { displayed_count: number }).displayed_count
+              : 0,
+            displayed_files: Array.isArray((d.artifacts as Record<string, unknown>).displayed_files)
+              ? ((d.artifacts as { displayed_files: unknown[] }).displayed_files).filter((item): item is string => typeof item === 'string')
+              : [],
+            filter_explanation: typeof (d.artifacts as Record<string, unknown>).filter_explanation === 'string'
+              ? (d.artifacts as { filter_explanation: string }).filter_explanation
+              : null,
+          }
+        : null,
+      next_action: typeof d.next_action === 'string' ? d.next_action : null,
+      run_id: typeof d.run_id === 'string' ? d.run_id : null,
+      subject_id: typeof d.subject_id === 'string' ? d.subject_id : null,
+      pushed: typeof d.pushed === 'boolean' ? d.pushed : null,
+      production_storage_state: typeof d.production_storage_state === 'string' ? d.production_storage_state : null,
+      underlying_functional_qa: typeof d.underlying_functional_qa === 'string' ? d.underlying_functional_qa : null,
+      manual_qa_status: typeof d.manual_qa_status === 'string' ? d.manual_qa_status : null,
+      operator_qa: typeof d.operator_qa === 'string' ? d.operator_qa : null,
       blockers: Array.isArray(d.blockers)
         ? d.blockers.map((b) => {
             const o = b as { type?: string; description?: string; blocks_feature?: string | null };

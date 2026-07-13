@@ -254,7 +254,7 @@ function formatDate(iso: string | null): string {
 }
 
 function formatDuration(min: number | null): string {
-  if (min === null || min === undefined) return '';
+  if (min === null || min === undefined || !Number.isFinite(min) || min <= 0) return 'UNKNOWN';
   if (min < 60) return `${min}m`;
   const h = Math.floor(min / 60);
   const m = min % 60;
@@ -291,6 +291,18 @@ function hasLegacyMetadataConflict(report: SessionReport): boolean {
 }
 
 function getValidationState(report: SessionReport): { badgeClass: string; label: string; note: string } {
+  if (report.tests.label === 'SMOKE ONLY') {
+    return { badgeClass: 'warn', label: 'SMOKE ONLY', note: 'Smoke verification was recorded, but the full test suite was not run.' };
+  }
+  if (report.tests.label === 'TESTS NOT RUN') {
+    return { badgeClass: 'warn', label: 'TESTS NOT RUN', note: 'The report explicitly says tests were not run; this is not a test failure.' };
+  }
+  if (report.tests.label === 'TESTS FAIL') {
+    return { badgeClass: 'fail', label: 'TESTS FAIL', note: 'Tests ran and reported a failure.' };
+  }
+  if (report.tests.label === 'TESTS PASS') {
+    return { badgeClass: 'pass', label: 'TESTS PASS', note: 'Tests passed.' };
+  }
   const smokeContext = [report.summary, report.tests.details, report.recommendation.risk_notes]
     .filter((value): value is string => Boolean(value))
     .some((value) => /smoke/i.test(value));
@@ -434,6 +446,12 @@ ${exampleBlock}
   const validation = getValidationState(r);
   const testsBadge = `<span class="badge ${validation.badgeClass}">${esc(validation.label)}</span>`;
   const schemaVersion = getSchemaVersion(r.raw);
+  const artifactFiles = r.artifacts?.displayed_files ?? r.changes;
+  const proofFilesTotal = r.artifacts?.proof_files_total ?? r.changes.length;
+  const displayedArtifactCount = r.artifacts?.displayed_count ?? artifactFiles.length;
+  const artifactsList = artifactFiles.length > 0
+    ? `<ul>${artifactFiles.map((name) => `<li class="mono">${esc(name)}</li>`).join('')}</ul>`
+    : '<p class="muted">No proof artifact names were listed in this report.</p>';
   const changesList =
     r.changes.length > 0
       ? `<ul>${r.changes.map((c) => `<li class="mono">${esc(c)}</li>`).join('')}</ul>`
@@ -466,12 +484,23 @@ ${exampleBlock}
     r.kb_learnings.length > 0
       ? `<ul>${r.kb_learnings.map((k) => `<li>${esc(k)}</li>`).join('')}</ul>`
       : '<p class="muted">No KB learnings recorded.</p>';
-  const recBlock = `
-<h3>Next Actions</h3>
-<p><strong>Suggested next feature:</strong> ${r.recommendation.next_feature_id ? `<span class="mono">${esc(r.recommendation.next_feature_id)}</span>` : '<span class="muted">none</span>'}</p>
-<p>${esc(r.recommendation.reasoning ?? '(no reasoning provided)')}</p>
-${r.recommendation.risk_notes ? `<p class="muted"><strong>Risk:</strong> ${esc(r.recommendation.risk_notes)}</p>` : ''}
-`;
+  const recommendedAction = r.next_action || r.recommendation.reasoning;
+  const recBlock = recommendedAction
+    ? `<h3>Next Recommended Action</h3><p>${esc(recommendedAction)}</p>${r.recommendation.risk_notes ? `<p class="muted"><strong>Risk:</strong> ${esc(r.recommendation.risk_notes)}</p>` : ''}`
+    : `<h3>Next Actions</h3><p><strong>Suggested next feature:</strong> ${r.recommendation.next_feature_id ? `<span class="mono">${esc(r.recommendation.next_feature_id)}</span>` : '<span class="muted">none</span>'}</p><p class="muted">No recommended action was recorded.</p>`;
+  const identityRows = [
+    r.run_id ? `<div class="row-meta">RUN_ID: <span class="mono">${esc(r.run_id)}</span></div>` : '',
+    r.subject_id ? `<div class="row-meta">SUBJECT_ID: <span class="mono">${esc(r.subject_id)}</span></div>` : '',
+    typeof r.pushed === 'boolean' ? `<div class="row-meta">Pushed: <span class="mono">${r.pushed ? 'yes' : 'no'}</span></div>` : '',
+    r.production_storage_state ? `<div class="row-meta">Production storage: <span class="mono">${esc(r.production_storage_state)}</span></div>` : '',
+    r.underlying_functional_qa ? `<div class="row-meta">Underlying functional QA: <span class="mono">${esc(r.underlying_functional_qa)}</span></div>` : '',
+    r.manual_qa_status ? `<div class="row-meta">Manual QA: <span class="mono">${esc(r.manual_qa_status)}</span></div>` : '',
+    r.operator_qa ? `<div class="row-meta">Operator QA: <span class="mono">${esc(r.operator_qa)}</span></div>` : '',
+  ].join('');
+  const checks = r.tests.checks ?? [];
+  const checksList = checks.length > 0
+    ? `<ul>${checks.map((check) => `<li><span class="badge ${check.status === 'PASS' ? 'pass' : 'fail'}">${esc(check.status)}</span> ${esc(check.display)}</li>`).join('')}</ul>`
+    : '';
   const rawJson = JSON.stringify(r.raw, null, 2);
 
   const body = `
@@ -479,8 +508,8 @@ ${r.recommendation.risk_notes ? `<p class="muted"><strong>Risk:</strong> ${esc(r
 <p class="muted">${esc(r.project ?? '—')} · ${esc(r.nuc ?? '—')} · agent: <span class="mono">${esc(r.agent ?? '—')}</span> · prompt: <span class="mono">${esc(r.prompt_type ?? '—')}</span></p>
 <div class="stats">
   <div class="stat"><div class="stat-num">${esc(formatDate(r.timestamp).split(' ')[0])}</div><div class="stat-lbl">Date</div></div>
-  <div class="stat"><div class="stat-num">${esc(formatDuration(r.duration_minutes) || '—')}</div><div class="stat-lbl">Duration</div></div>
-  <div class="stat"><div class="stat-num">${r.changes.length}</div><div class="stat-lbl">Files</div></div>
+  <div class="stat"><div class="stat-num">${esc(formatDuration(r.duration_minutes))}</div><div class="stat-lbl">Duration</div></div>
+  <div class="stat"><div class="stat-num">${proofFilesTotal}</div><div class="stat-lbl">Proof Files</div></div>
   <div class="stat"><div class="stat-num">${r.kb_learnings.length}</div><div class="stat-lbl">KB Items</div></div>
 </div>
 
@@ -490,14 +519,15 @@ ${r.recommendation.risk_notes ? `<p class="muted"><strong>Risk:</strong> ${esc(r
   ${testsBadge}
   <div class="row-meta">Session report schema/version: <span class="mono">${esc(schemaVersion ?? 'not provided')}</span></div>
   <div class="row-meta">Report source: <span class="mono">${esc(r.filepath)}</span></div>
+  ${identityRows}
 </div>
 
-<h2>Work Done</h2>
-<div class="panel">${changesList}</div>
+${r.artifacts ? `<h2>Proof Artifacts</h2><div class="panel"><p><strong>${proofFilesTotal} total proof files; ${displayedArtifactCount} displayed.</strong></p><p class="muted">${esc(r.artifacts.filter_explanation ?? 'Artifact names are displayed; contents are not embedded.')}</p>${artifactsList}</div>` : `<h2>Work Done</h2><div class="panel">${changesList}</div>`}
 
 <h2>Validation</h2>
 <div class="panel">
   <p>${testsBadge} ${esc(validation.note)}</p>
+  ${checksList}
   ${r.tests.details ? `<pre>${esc(r.tests.details)}</pre>` : '<p class="muted">No test details recorded.</p>'}
 </div>
 

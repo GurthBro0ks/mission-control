@@ -1,0 +1,45 @@
+{
+  "session_id": "2026-07-13T11:43:09Z",
+  "agent": "claude",
+  "nuc": "nuc1",
+  "project": "slimy-harness",
+  "feature_id": "harness-growth-iteration1-isolated-qa-rerun-after-repository-subject-repair",
+  "prompt_type": "direct",
+  "status": "PASS",
+  "summary": "Secret-free regression projection of the Iteration 1 isolated QA proof.",
+  "changes": [],
+  "tests": {
+    "ran": true,
+    "passed": true,
+    "label": "TESTS PASS",
+    "details": "Focused tests: 33/33 PASS\nFull tests: 83/83 PASS\nHarness validation: 145/0 PASS\nCollision: 1/1 PASS\nConcurrency: 1/1 PASS\nTorn-write: 1/1 PASS",
+    "checks": [
+      { "id": "focused", "name": "Focused tests", "status": "PASS", "passed": 33, "failed": 0, "total": 33, "display": "Focused tests: 33/33 PASS", "source_artifact": "focused-tests.txt" },
+      { "id": "full", "name": "Full tests", "status": "PASS", "passed": 83, "failed": 0, "total": 83, "display": "Full tests: 83/83 PASS", "source_artifact": "full-tests.txt" },
+      { "id": "harness", "name": "Harness validation", "status": "PASS", "passed": 145, "failed": 0, "total": 145, "display": "Harness validation: 145/0 PASS", "source_artifact": "harness-validation.txt" }
+    ]
+  },
+  "artifacts": {
+    "proof_files_total": 44,
+    "displayed_count": 4,
+    "displayed_files": ["RESULT.md", "focused-tests.txt", "full-tests.txt", "harness-validation.txt"],
+    "filter_explanation": "This compact renderer fixture intentionally lists 4 representative safe names from 44 total proof files."
+  },
+  "blockers": [],
+  "recommendation": {
+    "next_feature_id": null,
+    "reasoning": "Owner reviews the protected QA report. If OPERATOR_QA=PASS, run a separate Claude closeout and guarded push for commits 36091a17 and 646097f6 before Iteration 2.",
+    "risk_notes": ""
+  },
+  "next_action": "Owner reviews the protected QA report. If OPERATOR_QA=PASS, run a separate Claude closeout and guarded push for commits 36091a17 and 646097f6 before Iteration 2.",
+  "kb_learnings": [],
+  "duration_minutes": 9,
+  "timestamp": "2026-07-13T11:43:09Z",
+  "run_id": "run_20260713T113521654589Z_ad61482501b14b4496c4278e4633a745",
+  "subject_id": "slimy-harness@646097f6ac0933d490ae837ff52e450725648cbe",
+  "pushed": false,
+  "production_storage_state": "inactive",
+  "underlying_functional_qa": "PASS",
+  "manual_qa_status": "pending_owner_review",
+  "operator_qa": "pending_owner_review"
+}
